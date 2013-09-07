@@ -25,16 +25,18 @@ use IEEE.std_logic_unsigned.all;
 
 package rb_config is  
 	
-	constant errBusLength	: std_logic_vector	:= "001";	  	-- Bus Length != DSlot+CSlot
-	constant errIllegalAddress	std_logic_vector	:= "010"; -- Illegal Bus address 
-	constant idle std_logic_vector := x"ffffffff";
+	constant errBusLength	: std_logic_vector( 2 downto 0 )	:= "001";	  	-- Bus Length != Slot
+	constant errIllegalAddress	:std_logic_vector( 2 downto 0 )	:= "010"; -- Illegal Bus address 
 	
-	constant ones	: std_logic_vector(m-1 downto 0)	:= (others => '1');
+--	constant Slot : integer := 17;
+	constant Bwidth : integer := 64;
+--	constant Num : integer := 2;
+	
+	type busgroup is array( natural range<> ) of STD_LOGIC_VECTOR(Bwidth-1 downto 0);
 	
 end rb_config;
 
 
-package body rs_config is  	
-	
+package body rb_config is  	
 
 end rb_config;
