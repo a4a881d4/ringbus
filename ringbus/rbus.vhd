@@ -29,25 +29,23 @@ use IEEE.std_logic_unsigned.all;
 use work.rb_config.all;
 
 entity RBUS is
-	generic( 
-		Slot : integer := 17;
---		Bwidth : integer := 64;
-		Num : integer := 3
-		);
+	generic(
+		Num		: natural
+	);
 	port(
 		-- system
-		sync : in STD_LOGIC;
-		clk : in STD_LOGIC;
-		rst : in STD_LOGIC;
+		sync	: in STD_LOGIC;
+		clk		: in STD_LOGIC;
+		rst		: in STD_LOGIC;
 		
 		-- tx
-		tx : in busgroup( Num-1 downto 0);
-		Req : in std_logic_vector( Num-1 downto 0);
-		tx_sop : out std_logic_vector( Num-1 downto 0);
+		tx		: in busgroup( Num-1 downto 0 );
+		Req		: in std_logic_vector( Num-1 downto 0 );
+		tx_sop	: out std_logic_vector( Num-1 downto 0 );
 		
 		-- rx
-		rx_sop : out std_logic_vector( Num-1 downto 0);
-		rx: out busgroup( Num-1 downto 0)
+		rx_sop	: out std_logic_vector( Num-1 downto 0 );
+		rx		: out busgroup( Num-1 downto 0 )
 		);
 end RBUS;
 
@@ -69,10 +67,9 @@ architecture behave of RBUS is
 	signal rx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
 
 component BUSCONTROLLER 
-	generic( 
-		Slot	:	integer	:= 17;
-		Bwidth:	integer	:= 64
-		);
+	generic(
+		Num		: natural
+	);
 	port(
 		sync : in STD_LOGIC;
 		clk : in STD_LOGIC;
@@ -86,8 +83,6 @@ end component;
 		
 component BUSEP
 	generic( 
-		Slot	:	integer	:= 17;
-		Bwidth:	integer	:= 64;
 		POS : integer := 1
 		);
 	port(
@@ -146,10 +141,6 @@ delay:ShiftReg
 		);
 		
 controller:BUSCONTROLLER 
-	generic map( 
-		Slot	=> SLOT,
-		Bwidth => BWidth
-		)
 	port map(
 		sync => sync,
 		clk => clk,
@@ -163,8 +154,6 @@ controller:BUSCONTROLLER
 ep: for I in 0 to Num-1 generate
 	epx: BUSEP
 	generic map( 
-		Slot=>Slot,
-		Bwidth=>Bwidth,
 		POS => I
 		)
 	port map(

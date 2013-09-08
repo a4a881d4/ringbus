@@ -25,12 +25,11 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.std_logic_arith.all;
 use IEEE.std_logic_unsigned.all;
+
 use work.rb_config.all;
 
 entity BUSCONTROLLER is
 	generic( 
-		Slot	:	integer	:= 17;
-		Bwidth:	integer	:= 64;
 		Num : integer := 3
 		);
 	port(
@@ -46,17 +45,17 @@ end BUSCONTROLLER;
 
 architecture behave of BUSCONTROLLER is
 	signal counter : integer := 0;
-	signal inDBUS, outDBUS : std_logic_vector( 2 downto 0 ) := (others => '0');
-	signal inAddr, outAddr : std_logic_vector( 4 downto 0 ) := (others => '0');
+	signal inDBUS, outDBUS : std_logic_vector( dbusid_end downto dbusid_start ) := (others => '0');
+	signal inAddr, outAddr : std_logic_vector( daddr_end downto daddr_start ) := (others => '0');
 	signal inUsed, outUsed : std_logic := '0';
-	signal inCommand,outCommand : std_logic_vector( 6 downto 0 ) := (others => '0');
+	signal inCommand,outCommand : std_logic_vector( command_end downto command_start ) := (others => '0');
 begin
 
 
-inUsed<=D(0);
-inCommand<=D( 7 downto 1 );
-inAddr <= D(4 downto 0);
-inDBus <= D(7 downto 5);
+inUsed<=D( used_flag_pos );
+inCommand<=D( command_end downto command_start );
+inAddr <= D( daddr_end downto daddr_start );
+inDBus <= D( dbusid_end downto dbusid_start );
 outAddr<=inAddr;
 outCommand<=inCommand;
 
@@ -64,7 +63,7 @@ busCheck:process( fin, inUsed,inAddr,inDBus )
 begin
 	if fin='1' then
 		if inUsed='1' then
-			if inDBus/="000" then
+			if inDBus/=zeros(dbusid_end downto dbusid_start) then
 				outDBus<=(others => '0');
 				outUsed<='0';
 			elsif inAddr>Num then
@@ -94,11 +93,11 @@ begin
 		if sync='1' or counter=Slot-1 then
 			fout<='1';
 			counter<=0;
-			Q(0)<=outUsed;
-			Q(7 downto 1)<=outCommand;
-			Q(4 downto 0)<=outAddr;
-			Q(7 downto 5)<=outDBus;
-			Q(Bwidth-1 downto 8)<=D(Bwidth-1 downto 8);
+			Q( used_flag_pos )<=outUsed;
+			Q( command_end downto command_start )<=outCommand;
+			Q( daddr_end downto daddr_start )<=outAddr;
+			Q( dbusid_end downto dbusid_start )<=outDBus;
+			Q( Bwidth-1 downto dbusid_end+1 )<=D( Bwidth-1 downto dbusid_end+1 );
 		else
 			fout<='0';
 			counter<=counter+1;

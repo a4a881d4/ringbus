@@ -23,12 +23,11 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.std_logic_arith.all;
 use IEEE.std_logic_unsigned.all;
+
 use work.rb_config.all;
 
 entity BUSEP is
 	generic( 
-		Slot	:	integer	:= 17;
-		Bwidth:	integer	:= 64;
 		POS : integer := 1
 		);
 	port(
@@ -52,8 +51,8 @@ entity BUSEP is
 end BUSEP;
 
 architecture behave of BUSEP is
-	signal inDBUS : std_logic_vector( 2 downto 0 ) := (others => '0');
-	signal inAddr : std_logic_vector( 4 downto 0 ) := (others => '0');
+	signal inDBUS : std_logic_vector( dbusid_end downto dbusid_start ) := (others => '0');
+	signal inAddr : std_logic_vector( daddr_end downto daddr_start ) := (others => '0');
 	signal inUsed : std_logic := '0';
 	signal hold : std_logic := '0';
 	signal tx_sop_i : std_logic := '0';
@@ -61,9 +60,10 @@ architecture behave of BUSEP is
 
 begin
 
-inUsed<=D(0);
-inAddr <= D(4 downto 0);
-inDBus <= D(7 downto 5);
+inUsed<=D( used_flag_pos );
+inAddr <= D( daddr_end downto daddr_start );
+inDBus <= D( dbusid_end downto dbusid_start );
+
 tx_sop<=tx_sop_i;
 rx_sop<=rx_sop_i;
 
@@ -72,7 +72,7 @@ rx<=D;
 usedP:process(fin,inDBus,inAddr,inUsed,Req)
 begin
 	if fin='1' then 
-		if inDBus="000" and inAddr=POS and inUsed='1' then 
+		if inDBus=zeros(dbusid_end downto dbusid_start) and inAddr=POS and inUsed='1' then 
 			rx_sop_i<='1';
 		else
 			rx_sop_i<='0';
@@ -99,8 +99,8 @@ begin
 			if tx_sop_i='1' then
 				Q<=tx;
 			elsif rx_sop_i='1' then
-				Q(0)<='0';
-				Q(BWIDTH-1 downto 1)<=D(BWIDTH-1 downto 1);
+				Q( Bwidth-1 downto 1 )<=D( Bwidth-1 downto 1 );
+				Q( used_flag_pos )<='0';	-- this is used flag 
 			else
 				Q<=D;
 			end if;
