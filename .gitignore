@@ -15,7 +15,11 @@
 *.exe
 *.out
 *.app
-*.bak
 
 # work dir
 work/*
+
+# backup
+*~
+*.bak
+
