@@ -16,7 +16,7 @@
 --
 -- Description : Ring bus controller
 -- 
--- Rev: 3.0
+-- Rev: 3.1
 --
 ---------------------------------------------------------------------------------------------------
 
@@ -30,7 +30,9 @@ use work.rb_config.all;
 
 entity BUSCONTROLLER is
 	generic( 
-		Num : integer := 3
+		Bwidth : natural := 128;
+		Num : integer := 3;
+		BUSLENGTH := Slot
 		);
 	port(
 		sync : in STD_LOGIC;
@@ -52,34 +54,32 @@ architecture behave of BUSCONTROLLER is
 begin
 
 
-inUsed<=D( used_flag_pos );
 inCommand<=D( command_end downto command_start );
 inAddr <= D( daddr_end downto daddr_start );
 inDBus <= D( dbusid_end downto dbusid_start );
 outAddr<=inAddr;
-outCommand<=inCommand;
 
 busCheck:process( fin, inUsed,inAddr,inDBus )
 begin
 	if fin='1' then
-		if inUsed='1' then
+		if inCommand=command_idle then
 			if inDBus/=zeros(dbusid_end downto dbusid_start) then
 				outDBus<=(others => '0');
-				outUsed<='0';
+				outCommand<=inCommand;
 			elsif inAddr>Num then
 				outDBus<=(others => '0');
-				outUsed<='0';
+				outCommand<=inCommand;
 			else
 				outDBus<=inDBus;
-				outUsed<=inUsed;
+				outCommand<=inCommand;
 			end if;
 		else
 			outDBus<=inDBus;
-			outUsed<=inUsed;
+			outCommand<=inCommand;
 		end if;
 	else
 		outDBus<=inDBus;
-		outUsed<=inUsed;
+		outCommand<=inCommand;
 	end if;
 end process;
 
@@ -90,10 +90,9 @@ begin
 		fout<='0';
 		Q<=(others => '0');
 	elsif rising_edge(clk) then
-		if sync='1' or counter=Slot-1 then
+		if sync='1' or counter=BUSLENGTH-1 then
 			fout<='1';
 			counter<=0;
-			Q( used_flag_pos )<=outUsed;
 			Q( command_end downto command_start )<=outCommand;
 			Q( daddr_end downto daddr_start )<=outAddr;
 			Q( dbusid_end downto dbusid_start )<=outDBus;

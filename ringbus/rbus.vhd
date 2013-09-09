@@ -16,7 +16,7 @@
 --
 -- Description : Ring bus 
 -- 
--- Rev: 3.0
+-- Rev: 3.1
 --
 ---------------------------------------------------------------------------------------------------
 
@@ -30,6 +30,7 @@ use work.rb_config.all;
 
 entity RBUS is
 	generic(
+		Bwidth : natural := 128;
 		Num		: natural
 	);
 	port(
@@ -68,6 +69,7 @@ architecture behave of RBUS is
 
 component BUSCONTROLLER 
 	generic(
+		Bwidth : natural := 128;
 		Num		: natural
 	);
 	port(
@@ -83,6 +85,7 @@ end component;
 		
 component BUSEP
 	generic( 
+		Bwidth : natural := 128;
 		POS : integer := 1
 		);
 	port(
@@ -141,6 +144,10 @@ delay:ShiftReg
 		);
 		
 controller:BUSCONTROLLER 
+	generic map( 
+		Bwidth => Bwidth,
+		POS => I
+		)
 	port map(
 		sync => sync,
 		clk => clk,
@@ -154,6 +161,7 @@ controller:BUSCONTROLLER
 ep: for I in 0 to Num-1 generate
 	epx: BUSEP
 	generic map( 
+		Bwidth => Bwidth,
 		POS => I
 		)
 	port map(

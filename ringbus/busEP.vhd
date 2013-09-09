@@ -16,6 +16,8 @@
 --
 -- Description : Ring bus end point
 --
+-- Rev: 3.1
+--
 ---------------------------------------------------------------------------------------------------
 
 
@@ -28,6 +30,7 @@ use work.rb_config.all;
 
 entity BUSEP is
 	generic( 
+		Bwidth : natural := 128;
 		POS : integer := 1
 		);
 	port(
@@ -51,16 +54,17 @@ entity BUSEP is
 end BUSEP;
 
 architecture behave of BUSEP is
+
+	signal inCommand : std_logic_vector( command_end downto command_start ) := (others => '0');
 	signal inDBUS : std_logic_vector( dbusid_end downto dbusid_start ) := (others => '0');
 	signal inAddr : std_logic_vector( daddr_end downto daddr_start ) := (others => '0');
-	signal inUsed : std_logic := '0';
 	signal hold : std_logic := '0';
 	signal tx_sop_i : std_logic := '0';
 	signal rx_sop_i : std_logic := '0';
 
 begin
 
-inUsed<=D( used_flag_pos );
+inCommand <= D( command_end downto command_start );
 inAddr <= D( daddr_end downto daddr_start );
 inDBus <= D( dbusid_end downto dbusid_start );
 
@@ -72,12 +76,12 @@ rx<=D;
 usedP:process(fin,inDBus,inAddr,inUsed,Req)
 begin
 	if fin='1' then 
-		if inDBus=zeros(dbusid_end downto dbusid_start) and inAddr=POS and inUsed='1' then 
+		if inDBus=zeros(dbusid_end downto dbusid_start) and inAddr=POS and inCommand/=command_idle then 
 			rx_sop_i<='1';
 		else
 			rx_sop_i<='0';
 		end if;
-		if Req='1' and (inUsed='0' or rx_sop_i='1') then
+		if Req='1' and ( inCommand=command_idle or rx_sop_i='1') then
 			tx_sop_i<='1';
 		else
 			tx_sop_i<='0';
@@ -99,8 +103,8 @@ begin
 			if tx_sop_i='1' then
 				Q<=tx;
 			elsif rx_sop_i='1' then
-				Q( Bwidth-1 downto 1 )<=D( Bwidth-1 downto 1 );
-				Q( used_flag_pos )<='0';	-- this is used flag 
+				Q( Bwidth-1 downto daddr_start )<=D( Bwidth-1 downto daddr_start );
+				Q( used_flag_pos )<=command_idle;	
 			else
 				Q<=D;
 			end if;
