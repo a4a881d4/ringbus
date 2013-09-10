@@ -53,7 +53,10 @@ end RBUS2;
 
 architecture behave of RBUS2 is
 
-componet blockdram
+constant Num : natural := 2;
+constant Bwidth : natural := 128;
+
+component blockdram
 	generic( 
 		depth:	integer	:= 256;
 		Dwidth: integer	:= 8;
@@ -83,37 +86,37 @@ component DUMMYSRC
 
 		Addr : in std_logic_vector( Awidth-1 downto 0 );
 		Q : out STD_LOGIC_VECTOR( Bwidth-1 downto 0 );
-		ren : out STD_LOGIC
+		ren : in STD_LOGIC
 		
 		);
 end component;
+
+signal tx_i : std_logic_vector( Num*Bwidth-1 downto 0 );
+signal Req_i : std_logic_vector(Num-1 downto 0):= (others => '0');
+signal tx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
+
+signal rx_i : std_logic_vector( Num*Bwidth-1 downto 0 );
+signal rx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
+
+signal DMA0H, DMA1H : std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
+signal DMA0A, DMA1A : std_logic_vector( 9 downto 0 ) := ( others=>'0' );
+signal DMA0_Req, DMA1_Req : std_logic := '0';
+signal DMA0_Busy, DMA1_Busy : std_logic := '0';
+
+signal viewA : std_logic_vector( 9 downto 0 ) := ( others=>'0' );
+signal viewD : std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
+signal viewen : std_logic := '0';
+
+signal CS0, CS1 : std_logic := '0';
+
+signal Dout0, Dout1 : std_logic_vector( 7 downto 0 ) := ( others=>'Z' );
+
+signal ramWA, ramRA, dummyA : std_logic_vector( 9 downto 0 ) := ( others=>'0' );
+signal ramWD, ramRD, dummyD : std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
+
+signal ramWen, ramRen, dummyen : std_logic := '0';
+
 begin
-
-	signal tx_i : busgroup( Num-1 downto 0);
-	signal Req_i : std_logic_vector(Num-1 downto 0):= (others => '0');
-	signal tx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
-
-	signal rx_i : busgroup( Num-1 downto 0);
-	signal rx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
-
-	signal DMA0H, DMA1H std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
-	signal DMA0A, DMA1A std_logic_vector( 9 downto 0 ) := ( others=>'0' );
-	signal DMA0_Req, DMA1_Req std_logic := '0';
-	signal DMA0_Busy, DMA1_Busy std_logic := '0';
-
-	signal viewA std_logic_vector( 9 downto 0 ) := ( others=>'0' );
-	signal viewD std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
-	signal viewen std_logic := '0';
-
-	signal CS0, CS1 std_logic := '0';
-
-	signal Dout0, Dout1 std_logic_vector( 7 downto 0 ) := ( others=>'Z' );
-
-	signal ramWA, ramRA, dummyA std_logic_vector( 9 downto 0 ) := ( others=>'0' );
-	signal ramWD, ramRD, dummyD std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
-
-	signal ramWen, ramRen, dummyen std_logic := '0';
-
 	
 bus2:RBUS 
 	generic map( 
@@ -147,16 +150,16 @@ outEP0:EPMEMOUT
 		rst => rst,
 		
 		-- bus interface
-		tx_sop => tx_sop(0),
+		tx_sop => tx_sop_i(0),
 
-		Req => req(0),
-		tx => tx(0),
+		Req => req_i(0),
+		tx => tx_i((0+1)*Bwidth-1 downto 0*Bwidth),
 		
 		-- Mem interface
 		mD => dummyD,
 		
-		mAddr => dummyA
-		mren => dummyen
+		mAddr => dummyA,
+		mren => dummyen,
 		
 		-- Local Bus interface
 		header => DMA0H,
@@ -167,7 +170,7 @@ outEP0:EPMEMOUT
 
 outEP1:EPMEMOUT
 	generic map (
-		Awidth = 10,
+		Awidth => 10,
 		Bwidth => 128
 	)
 	port map(
@@ -176,16 +179,16 @@ outEP1:EPMEMOUT
 		rst => rst,
 		
 		-- bus interface
-		tx_sop => tx_sop(1),
+		tx_sop => tx_sop_i(1),
 
-		Req => req(1),
-		tx => tx(1),
+		Req => req_i(1),
+		tx => tx_i((1+1)*Bwidth-1 downto 1*Bwidth),
 		
 		-- Mem interface
 		mD => ramRD,
 		
-		mAddr => ramRA
-		mren => ramRen
+		mAddr => ramRA,
+		mren => ramRen,
 		
 		-- Local Bus interface
 		header => DMA1H,
@@ -195,20 +198,19 @@ outEP1:EPMEMOUT
 	);
 
 INEP0:EPMEMIN
-	generic(
+	generic map(
 		Awidth => 10,
 		Bwidth => 128,
-		cs_len => 2,
 		CS => "00"
-	);
-	port(
+	)
+	port map(
 		-- system interface
 		clk => clk,
 		rst => rst,
 		
 		-- bus interface
-		rx_sop => rx_sop(0),
-		rx => rx(0),
+		rx_sop => rx_sop_i(0),
+		rx => rx_i((0+1)*Bwidth-1 downto 0*Bwidth),
 		
 		-- Mem interface
 		Addr => viewA,
@@ -218,20 +220,19 @@ INEP0:EPMEMIN
 		);
 
 INEP1:EPMEMIN
-	generic(
+	generic map(
 		Awidth => 10,
 		Bwidth => 128,
-		cs_len => 2,
 		CS => "00"
-	);
-	port(
+	)
+	port map(
 		-- system interface
 		clk => clk,
 		rst => rst,
 		
 		-- bus interface
-		rx_sop => rx_sop(1),
-		rx => rx(1),
+		rx_sop => rx_sop_i(1),
+		rx => rx_i((1+1)*Bwidth-1 downto 1*Bwidth),
 		
 		-- Mem interface
 		Addr => ramWA,
@@ -244,7 +245,7 @@ DMA0:DMANP
 	generic map( 
 		Bwidth => 128,
 		SAwidth => 10,
-		DAwidth => 12
+		DAwidth => 12,
 		Lwidth => 10
 		)
 	port map(
@@ -258,11 +259,11 @@ DMA0:DMANP
 		laddr => DMA0A,
 		
 		busy => DMA0_Busy,
-		tx_sop => tx_sop(0),
+		tx_sop => tx_sop_i(0),
 		
 		-- CPU bus
 		CS => CS0,
-		wr => wrd
+		wr => wr,
 		rd => rd,
 		addr => addr( 3 downto 0 ),
 		Din => Din,
@@ -270,14 +271,14 @@ DMA0:DMANP
 		cpuClk => cpuClk,
 		
 		-- Priority 
-		en => 1
+		en => '1'
 		);
 
 DMA1:DMANP
 	generic map( 
 		Bwidth => 128,
 		SAwidth => 10,
-		DAwidth => 12
+		DAwidth => 12,
 		Lwidth => 10
 		)
 	port map(
@@ -291,11 +292,11 @@ DMA1:DMANP
 		laddr => DMA1A,
 		
 		busy => DMA0_Busy,
-		tx_sop => tx_sop(1),
+		tx_sop => tx_sop_i(1),
 		
 		-- CPU bus
 		CS => CS1,
-		wr => wrd
+		wr => wr,
 		rd => rd,
 		addr => addr( 3 downto 0 ),
 		Din => Din,
@@ -303,19 +304,19 @@ DMA1:DMANP
 		cpuClk => cpuClk,
 		
 		-- Priority 
-		en => 1
+		en => '1'
 		);
 		
 ep1ram : blockdram
 	generic map( 
-		depth:	integer	:= 1024,
-		Dwidth: integer	:= 128,
-		Awidth:	integer	:= 10
+		depth => 1024,
+		Dwidth => 128,
+		Awidth => 10
 		)
 	port map(
 		addra => ramWA,
 		clka => clk,
-		addrb => ramRA
+		addrb => ramRA,
 		clkb => clk,
 		dia => ramWD,
 		wea => ramWen,

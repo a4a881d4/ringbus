@@ -36,6 +36,9 @@ package rb_config is
 	constant addr_length		: natural := 6;
 	constant busid_length		: natural := 3;
 	constant len_length			: natural := 5;
+	
+	constant cs_len 			: natural := 2;
+
 	--
 	
 	constant tag_length			: natural := 8;
@@ -64,11 +67,10 @@ package rb_config is
 	constant addr_start			: natural := 64;
 	--
 	
-	type busgroup is array( natural range<> ) of STD_LOGIC_VECTOR( 127 downto 0 );
+	type busgroup is array( natural range<>, natural range<>) of STD_LOGIC;
 
 component RBUS is
 	generic( 
-		Slot : integer := 17;
 		Bwidth : integer := 64;
 		Num : integer := 3
 		);
@@ -79,13 +81,13 @@ component RBUS is
 		rst : in STD_LOGIC;
 		
 		-- tx
-		tx : in busgroup( Num-1 downto 0);
+		tx : in std_logic_vector( Num*Bwidth-1 downto 0 );
 		Req : in std_logic_vector( Num-1 downto 0);
 		tx_sop : out std_logic_vector( Num-1 downto 0);
 		
 		-- rx
 		rx_sop : out std_logic_vector( Num-1 downto 0);
-		rx: out busgroup( Num-1 downto 0)
+		rx: out std_logic_vector( Num*Bwidth-1 downto 0 )
 		);
 end component;
 
@@ -124,7 +126,6 @@ component EPMEMIN
 	generic(
 		Awidth : natural;
 		Bwidth : natural;
-		cs_len : natural;
 		CS : std_logic_vector( cs_len-1 downto 0 )
 	);
 	port(
@@ -145,4 +146,3 @@ component EPMEMIN
 end component;
 	
 end rb_config;
-

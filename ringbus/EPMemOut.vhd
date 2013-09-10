@@ -48,7 +48,7 @@ entity EPMEMOUT is
 		mD : in STD_LOGIC_VECTOR( Bwidth-1 downto 0 );
 		
 		mAddr : out std_logic_vector( Awidth-1 downto 0 );
-		mren : out STD_LOGIC
+		mren : out STD_LOGIC;
 		
 		-- Local Bus interface
 		header : in STD_LOGIC_VECTOR( Bwidth-1 downto 0 );
@@ -96,12 +96,12 @@ begin
 			req<='1';
 			addr_i<=laddr;
 			mren<='1';
-			lenc<=head( len_end downto len_start )-1;
+			lenc<=header( len_end downto len_start )-1;
 			hold<='0';
 			busy<='1';
 		elsif tx_sop='1' then
 			req<='0';
-			add_i<=addr_i+1;
+			addr_i<=addr_i+1;
 			lenc<=lenc-1;
 			hold<='1';
 		elsif lenc/=zeros( len_length-1 downto 0 ) 

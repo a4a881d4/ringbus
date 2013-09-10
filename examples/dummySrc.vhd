@@ -41,7 +41,7 @@ entity DUMMYSRC is
 
 		Addr : in std_logic_vector( Awidth-1 downto 0 );
 		Q : out STD_LOGIC_VECTOR( Bwidth-1 downto 0 );
-		ren : out STD_LOGIC
+		ren : in STD_LOGIC
 		
 		);
 end DUMMYSRC;

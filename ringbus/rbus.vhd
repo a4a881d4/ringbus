@@ -40,13 +40,13 @@ entity RBUS is
 		rst		: in STD_LOGIC;
 		
 		-- tx
-		tx		: in busgroup( Num-1 downto 0 );
+		tx		: in std_logic_vector( Num*Bwidth-1 downto 0 );
 		Req		: in std_logic_vector( Num-1 downto 0 );
 		tx_sop	: out std_logic_vector( Num-1 downto 0 );
 		
 		-- rx
 		rx_sop	: out std_logic_vector( Num-1 downto 0 );
-		rx		: out busgroup( Num-1 downto 0 )
+		rx		: out std_logic_vector( Num*Bwidth-1 downto 0 )
 		);
 end RBUS;
 
@@ -57,21 +57,22 @@ architecture behave of RBUS is
 	signal fbus : std_logic;
 	signal delay_in : STD_LOGIC_VECTOR(Bwidth downto 0);
 	signal delay_out : STD_LOGIC_VECTOR(Bwidth downto 0);
-	signal D : busgroup( Num-1 downto 0);
-	signal Q : busgroup( Num-1 downto 0);
+	signal D : std_logic_vector( Num*Bwidth-1 downto 0 );
+	signal Q : std_logic_vector( Num*Bwidth-1 downto 0 );
 	
-	signal tx_i : busgroup( Num-1 downto 0);
+	signal tx_i : std_logic_vector( Num*Bwidth-1 downto 0 );
 	signal Req_i : std_logic_vector(Num-1 downto 0):= (others => '0');
 	signal tx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
 
-	signal rx_i : busgroup( Num-1 downto 0);
+	signal rx_i : std_logic_vector( Num*Bwidth-1 downto 0 );
 	signal rx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
 
 component BUSCONTROLLER 
-	generic(
+	generic( 
 		Bwidth : natural := 128;
-		Num		: natural
-	);
+		Num : natural := 3;
+		BUSLENGTH : natural := Slot
+		);
 	port(
 		sync : in STD_LOGIC;
 		clk : in STD_LOGIC;
@@ -146,15 +147,16 @@ delay:ShiftReg
 controller:BUSCONTROLLER 
 	generic map( 
 		Bwidth => Bwidth,
-		POS => I
+		Num => Num,
+		BUSLENGTH => Slot
 		)
 	port map(
 		sync => sync,
 		clk => clk,
 		rst => rst,
-		fin => delay_out(Bwidth),
-		D => delay_out(Bwidth-1 downto 0),
-		Q => D(0),
+		fin => delay_out( Bwidth ),
+		D => delay_out( Bwidth-1 downto 0 ),
+		Q => D( Bwidth-1 downto 0 ),
 		fout => fbus
 		);
 
@@ -166,30 +168,30 @@ ep: for I in 0 to Num-1 generate
 		)
 	port map(
 		-- send to bus
-		tx=>tx_i(I),
+		tx=>tx_i( (I+1)*Bwidth-1 downto I*Bwidth ),
 		Req=>Req_i(I),
 		tx_sop=>tx_sop_i(I),
 		-- read from bus
 		rx_sop=>rx_sop_i(I),
-		rx=>rx_i(I),
+		rx=>rx_i( (I+1)*Bwidth-1 downto I*Bwidth ),
 		
 		-- Ring Bus internal signal
 		clk => clk,
 		rst => rst,
 		fin => fin(I),
-		D => D(I),
-		Q => Q(I),
+		D => D( (I+1)*Bwidth-1 downto I*Bwidth ),
+		Q => Q( (I+1)*Bwidth-1 downto I*Bwidth ),
 		fout => fout(I)
 		-- 
 		);
 end generate EP;
 
 connect:for I in 0 to Num-2 generate
-	D(I+1)<=Q(I);
+	D( (I+2)*Bwidth-1 downto (I+1)*Bwidth )<=Q( (I+1)*Bwidth-1 downto I*Bwidth );
 	fin(I+1)<=fout(I);
 end generate connect;
 
-delay_in( Bwidth-1 downto 0)<=Q(Num-1);
+delay_in( Bwidth-1 downto 0)<=Q( Num*Bwidth-1 downto (Num-1)*Bwidth );
 delay_in( Bwidth )<=fout(Num-1);
 fin(0)<=fbus;
 

@@ -32,7 +32,6 @@ entity EPMEMIN is
 	generic(
 		Awidth : natural;
 		Bwidth : natural;
-		cs_len : natural;
 		CS : std_logic_vector( cs_len-1 downto 0 )
 	);
 	port(

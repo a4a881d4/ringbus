@@ -74,7 +74,7 @@ rx_sop<=rx_sop_i;
 
 rx<=D;
 
-usedP:process(fin,inDBus,inAddr,inUsed,Req)
+usedP:process(fin,inDBus,inAddr,Req)
 begin
 	if fin='1' then 
 		if inDBus=zeros(dbusid_end downto dbusid_start) and inAddr=POS and inCommand/=command_idle then 
@@ -105,7 +105,7 @@ begin
 				Q<=tx;
 			elsif rx_sop_i='1' then
 				Q( Bwidth-1 downto daddr_start )<=D( Bwidth-1 downto daddr_start );
-				Q( used_flag_pos )<=command_idle;	
+				Q( command_end downto command_start )<=command_idle;	
 			else
 				Q<=D;
 			end if;

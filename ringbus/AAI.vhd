@@ -47,11 +47,12 @@ entity AAI is
 		);
 end AAI;
 
-architecture behave of DMANP is
-	
-	signal start : natural range( 0 to width-1 );
-	signal D : std_logic_vector( 127 downto 0 );
-	
+architecture behave of AAI is
+
+signal start : natural range 0 to width-1;
+signal D : std_logic_vector( 127 downto 0 );
+
+begin
 writeP:process( cpuClk, rst )
 begin
 	if rst='1' then

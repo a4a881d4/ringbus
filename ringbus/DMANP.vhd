@@ -33,7 +33,7 @@ entity DMANP is
 	generic( 
 		Bwidth : natural := 128;
 		SAwidth : natural := 16;
-		DAwidth : natural : 32;
+		DAwidth : natural := 32;
 		Lwidth : natural := 16
 		);
 	port(
@@ -47,7 +47,7 @@ entity DMANP is
 		laddr : out std_logic_vector(SAwidth-1 downto 0);
 		
 		busy : in std_logic;
-		tx_sop : in std_loic;
+		tx_sop : in std_logic;
 		
 		-- CPU bus
 		CS : in std_logic;
@@ -67,7 +67,7 @@ architecture behave of DMANP is
 
 	signal cs_wr : std_logic := '0';
 	signal inCommand : std_logic_vector( command_end downto command_start ) := (others => '0');
-	signal inDBUS : std_logic_vector( dbusid_end downto dbusid_start ) := (others => '0');
+	signal inDBUSID : std_logic_vector( dbusid_end downto dbusid_start ) := (others => '0');
 	signal inAddr : std_logic_vector( daddr_end downto daddr_start ) := (others => '0');
 	signal inLen : std_logic_vector( len_length downto 0 ) := ( others=>'0' );
 	
@@ -75,10 +75,10 @@ architecture behave of DMANP is
 	signal daddr, daddr_cpu : std_logic_vector( DAwidth-1 downto 0 ) := (others=>'0');
 	signal len, len_cpu : std_logic_vector( DAwidth-1 downto 0 ) := (others=>'0');
 
-	signal req_cpu_d1 : std_logic := '0';
+	signal req_cpu : std_logic := '0';
 	signal state : natural := 0;
-	
-commpont AAI
+	signal busy_i : std_logic := '0';
+component AAI
 	generic( 
 		width : natural := 32;
 		Baddr : std_logic_vector( 3 downto 0 ) := "0000"
@@ -101,7 +101,7 @@ begin
 
 header <= zeros( Bwidth-1 downto 0 );
 
-cs_rd <= cs and rd;
+cs_wr <= cs and wr;
 
 -- command = command_write
 inCommand <= command_write;
@@ -110,9 +110,9 @@ header( command_end downto command_start ) <= inCommand;
 
 -- set destination addr
 header( daddr_end downto daddr_start ) <= inAddr;
-header( dbusid_end downto dbusid_start ) <= inDBus;
+header( dbusid_end downto dbusid_start ) <= inDBUSID;
 
-header( len_end downto len_start ) <= inLen( len_end downto len_start );
+header( len_end downto len_start ) <= inLen( len_length-1 downto 0 );
 
 header( addr_start+DAwidth-1 downto addr_start ) <= daddr;
 
@@ -122,31 +122,31 @@ cpuwriteP:process( cpuClk, rst )
 begin
 	if rst='1' then
 		inAddr<=( others=>'0' );
-		inDBus<=( others=>'0' );
+		inDBUSID<=( others=>'0' );
 		req_cpu<='0';
 	elsif rising_edge(cpuClk) then
-		if cs_rd='1' then
+		if cs_wr='1' then
 			case addr is
 				when reg_BADDR =>
 					inAddr<=Din( addr_length-1 downto 0 );
 				when reg_BID =>
-					inBusID<=Din( busid_length-1 downto 0 );
+					inDBUSID<=Din( busid_length-1 downto 0 );
 				when reg_START => 
 					req_cpu<='1';
-				when other =>	
+				when others =>	
 					null;
 			end case;
 		end if;
 		if req_cpu='1' then
-			req_cpu='0';
+			req_cpu<='0';
 		end if;
 	end if;
 end process;			
 
-Dout(0) <= busy when cs='1' and rd='1' and addr=reg_BUSY else 'Z';
-busy <= '0' when state = state_IDLE else '1';
+Dout(0) <= busy_i when cs='1' and rd='1' and addr=reg_BUSY else 'Z';
+busy_i <= '0' when state = state_IDLE else '1';
 
-Dout( 7 dwonto 0 ) <= ( others=>'Z' );
+Dout( 7 downto 1 ) <= ( others=>'Z' );
 
 FSM:process( clk, rst )
 begin
@@ -155,8 +155,8 @@ begin
 		req<='0';
 		saddr <= zeros( SAwidth-1 downto 0 );
 		daddr <= zeros( DAwidth-1 downto 0 );
-		len <= zeros( LAwidth-1 downto 0 );
-		inLen <= zeros( len_length-1 downto 0 );
+		len <= zeros( Lwidth-1 downto 0 );
+		inLen <= zeros( len_length downto 0 );
 		inCommand <= command_idle;
 	elsif rising_edge(clk) then
 		case state is
@@ -177,7 +177,7 @@ begin
 				if len=zeros( Lwidth-1 downto 0 ) then
 					state<=state_END;
 				elsif len > max_payload then
-					inLen<=max_payload;
+					inLen<=zeros(len_length downto 0)+max_payload;
 				else
 					inLen<=len;
 				end if;
@@ -185,16 +185,16 @@ begin
 				state<=state_SENDING;
 			when state_SENDING =>
 				if en='1' and tx_sop='1' then
-					saddr=saddr+len;
-					daddr=daddr+len;
-					len=len-inLen;
+					saddr<=saddr+len;
+					daddr<=daddr+len;
+					len<=len-inLen;
 					state<=state_LOADING;
 					req<='0';
 				end if;
-			when state_ENDING =>
+			when state_END =>
 				req<='0';
 				state<=state_IDLE;
-			when other =>
+			when others =>
 				req<='0';
 				state<=state_IDLE;
 		end case;
@@ -235,7 +235,7 @@ DADDR_AAI:AAI
 
 LEN_AAI:AAI
 	generic map( 
-		width => LAwidth,
+		width => Lwidth,
 		Baddr => reg_LEN
 		)
 	port map(

@@ -20,11 +20,16 @@
 -- Rev: 3.1
 --
 ---------------------------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.std_logic_arith.all;
+use IEEE.std_logic_unsigned.all;
 
 entity RBUS2_TB is
 end RBUS2_TB;
 
-use work.SIMIO_PACKAGE.all;
+library	simio;
+use simio.SIMIO_PACKAGE.all;
 
 architecture sim of RBUS2_TB is
 
@@ -66,7 +71,7 @@ begin
 
 cpu:dspemulator
 	generic map( 
-		DSP_INC_FILE => rbus2.inc,
+		DSP_INC_FILE => "rbus2.inc",
 		ABUS_WIDTH => 8,
 		DBUS_WIDTH => 8 )
 	port map(

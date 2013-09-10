@@ -31,8 +31,8 @@ use work.rb_config.all;
 entity BUSCONTROLLER is
 	generic( 
 		Bwidth : natural := 128;
-		Num : integer := 3;
-		BUSLENGTH := Slot
+		Num : natural := 3;
+		BUSLENGTH : natural := Slot
 		);
 	port(
 		sync : in STD_LOGIC;
