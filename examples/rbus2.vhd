@@ -17,7 +17,7 @@
 -- Description : Ring bus example
 --               two end point
 -- 
--- Rev: 3.0
+-- Rev: 3.1
 --
 ---------------------------------------------------------------------------------------------------
 
@@ -29,7 +29,6 @@ use IEEE.std_logic_unsigned.all;
 
 use work.rb_config.all;
 use work.dma_config.all;
-
 
 entity RBUS2 is
 	port(
@@ -341,4 +340,10 @@ ep0src:DUMMYSRC
 viewAout<=viewA;
 viewDout<=viewD( 9 downto 0 );
 viewenout <= viewen;
+
+cs0<='1' when addr( 7 downto 4 )="0000" else '0';
+cs1<='1' when addr( 7 downto 4 )="0001" else '0';
+
+dout<=dout0 when cs0='1' else ( others=>'Z' );
+
 end behave;

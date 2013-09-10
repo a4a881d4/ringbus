@@ -47,11 +47,11 @@ package dma_config is
 	
 	constant max_payload	: natural := 32;
 
-component DMANP is
+component DMANP
 	generic( 
 		Bwidth : natural := 128;
 		SAwidth : natural := 16;
-		DAwidth : natural : 32;
+		DAwidth : natural := 32;
 		Lwidth : natural := 16
 		);
 	port(
@@ -65,7 +65,7 @@ component DMANP is
 		laddr : out std_logic_vector(SAwidth-1 downto 0);
 		
 		busy : in std_logic;
-		tx_sop : in std_loic;
+		tx_sop : in std_logic;
 		
 		-- CPU bus
 		CS : in std_logic;
@@ -79,6 +79,7 @@ component DMANP is
 		-- Priority 
 		en : in std_logic
 		);
-end componet;	
+end component;
+
 end dma_config;
 

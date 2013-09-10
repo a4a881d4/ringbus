@@ -41,7 +41,7 @@ package rb_config is
 	constant tag_length			: natural := 8;
 	
 	constant command_idle		: std_logic_vector( command_length-1 downto 0 )	:= zeros( command_length-1 downto 0 );
-	constant command_write		: std_logic_vector( command_length-1 downto 0 )	:= "1000";
+	constant command_write		: std_logic_vector( command_length-1 downto 0 )	:= "10";
 
 	constant Slot				: natural := 33;
 
@@ -64,7 +64,7 @@ package rb_config is
 	constant addr_start			: natural := 64;
 	--
 	
-	type busgroup is array( natural range<> ) of STD_LOGIC_VECTOR( natural range<> );
+	type busgroup is array( natural range<> ) of STD_LOGIC_VECTOR( 127 downto 0 );
 
 component RBUS is
 	generic( 
@@ -109,7 +109,7 @@ component EPMEMOUT
 		mD : in STD_LOGIC_VECTOR( Bwidth-1 downto 0 );
 		
 		mAddr : out std_logic_vector( Awidth-1 downto 0 );
-		mren : out STD_LOGIC
+		mren : out STD_LOGIC;
 		
 		-- Local Bus interface
 		header : in STD_LOGIC_VECTOR( Bwidth-1 downto 0 );

@@ -20,7 +20,8 @@ port (
 end ADemulator;
 
 architecture behavior of ADemulator is
-signal state: integer:=0;
+signal state: integer:=0; 
+constant StrLength : integer :=(DATA_WIDTH+1)/4;
 begin
 process( clk )
 	variable buf: line ;
@@ -28,7 +29,7 @@ process( clk )
 	FILE data_file: TEXT IS IN AD_FILE;
 	variable dataTemp: std_logic_vector(15 downto 0):="0000000000000000";
 	variable booval: boolean :=false;
-	variable strData : string(8 downto 1);
+	variable strData : string(StrLength downto 1);
 begin
 	if(AD_FILE = "UNUSED") then
 		ASSERT FALSE
