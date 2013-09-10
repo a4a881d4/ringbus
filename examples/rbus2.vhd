@@ -28,6 +28,7 @@ use IEEE.std_logic_arith.all;
 use IEEE.std_logic_unsigned.all;
 
 use work.rb_config.all;
+use work.dma_config.all;
 
 
 entity RBUS2 is
@@ -36,50 +37,88 @@ entity RBUS2 is
 		clk : in STD_LOGIC;
 		rst : in STD_LOGIC;
 		
-		-- tx
-		tx : in busgroup( 1 downto 0);
-		Req : in std_logic_vector( 1 downto 0);
-		tx_sop : out std_logic_vector( 1 downto 0);
+		-- CPU bus
+		wr : in std_logic;
+		rd : in std_logic;
+		addr : in std_logic_vector( 7 downto 0 );
+		Din : in std_logic_vector( 7 downto 0 );
+		Dout : out std_logic_vector( 7 downto 0 );
+		cpuClk : in std_logic;
 		
-		-- rx
-		rx_sop : out std_logic_vector( 1 downto 0);
-		rx: out busgroup( 1 downto 0)
-		);
+		-- out 
+		viewAout : out std_logic_vector( 9 downto 0 ); 
+		viewDout : out std_logic_vector( 9 downto 0 );
+		viewenout : out std_logic 
+	);
 end RBUS2;
 
 architecture behave of RBUS2 is
-	
 
-component RBUS is
+componet blockdram
 	generic( 
-		Slot	:	integer	:= 17;
---		Bwidth:	integer	:= 64;
-		Num : integer := 3
+		depth:	integer	:= 256;
+		Dwidth: integer	:= 8;
+		Awidth:	integer	:= 8
 		);
 	port(
-		-- system
-		sync : in STD_LOGIC;
-		clk : in STD_LOGIC;
-		rst : in STD_LOGIC;
-		
-		-- tx
-		tx : in busgroup( Num-1 downto 0);
-		Req : in std_logic_vector( Num-1 downto 0);
-		tx_sop : out std_logic_vector( Num-1 downto 0);
-		
-		-- rx
-		rx_sop : out std_logic_vector( Num-1 downto 0);
-		rx: out busgroup( Num-1 downto 0)
+		addra: IN std_logic_VECTOR(Awidth-1 downto 0);
+		clka: IN std_logic;
+		addrb: IN std_logic_VECTOR(Awidth-1 downto 0);
+		clkb: IN std_logic;
+		dia: IN std_logic_VECTOR(Dwidth-1 downto 0);
+		wea: IN std_logic;
+		reb: IN std_logic;
+		dob: OUT std_logic_VECTOR(Dwidth-1 downto 0)	:= (others => '0')
 		);
 end component;
 
+component DUMMYSRC
+	generic(
+		Awidth : natural;
+		Bwidth : natural
+	);
+	port(
+		-- system
+		clk : in STD_LOGIC;
+		rst : in STD_LOGIC;
 
+		Addr : in std_logic_vector( Awidth-1 downto 0 );
+		Q : out STD_LOGIC_VECTOR( Bwidth-1 downto 0 );
+		ren : out STD_LOGIC
+		
+		);
+end component;
 begin
 
+	signal tx_i : busgroup( Num-1 downto 0);
+	signal Req_i : std_logic_vector(Num-1 downto 0):= (others => '0');
+	signal tx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
+
+	signal rx_i : busgroup( Num-1 downto 0);
+	signal rx_sop_i : std_logic_vector(Num-1 downto 0):= (others => '0');
+
+	signal DMA0H, DMA1H std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
+	signal DMA0A, DMA1A std_logic_vector( 9 downto 0 ) := ( others=>'0' );
+	signal DMA0_Req, DMA1_Req std_logic := '0';
+	signal DMA0_Busy, DMA1_Busy std_logic := '0';
+
+	signal viewA std_logic_vector( 9 downto 0 ) := ( others=>'0' );
+	signal viewD std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
+	signal viewen std_logic := '0';
+
+	signal CS0, CS1 std_logic := '0';
+
+	signal Dout0, Dout1 std_logic_vector( 7 downto 0 ) := ( others=>'Z' );
+
+	signal ramWA, ramRA, dummyA std_logic_vector( 9 downto 0 ) := ( others=>'0' );
+	signal ramWD, ramRD, dummyD std_logic_vector( Bwidth-1 downto 0 ) := ( others=>'0' );
+
+	signal ramWen, ramRen, dummyen std_logic := '0';
+
+	
 bus2:RBUS 
 	generic map( 
-		Slot	=>17,
---		Bwidth=>64,
+		Bwidth=>128,
 		Num=>2
 		)
 	port map(
@@ -89,13 +128,217 @@ bus2:RBUS
 		rst => rst,
 		
 		-- tx
-		tx => tx,
-		Req => Req,
-		tx_sop => tx_sop,
+		tx => tx_i,
+		Req => Req_i,
+		tx_sop => tx_sop_i,
 		
 		-- rx
-		rx_sop => rx_sop,
-		rx => rx
+		rx_sop => rx_i,
+		rx => rx_sop_i
 		);
 
+outEP0:EPMEMOUT
+	generic map (
+		Awidth => 10,
+		Bwidth => 128
+	)
+	port map(
+		-- system interface
+		clk => clk,
+		rst => rst,
+		
+		-- bus interface
+		tx_sop => tx_sop(0),
+
+		Req => req(0),
+		tx => tx(0),
+		
+		-- Mem interface
+		mD => dummyD,
+		
+		mAddr => dummyA
+		mren => dummyen
+		
+		-- Local Bus interface
+		header => DMA0H,
+		laddr => DMA0A,
+		Req_in => DMA0_Req,  
+		busy => DMA0_busy
+	);
+
+outEP1:EPMEMOUT
+	generic map (
+		Awidth = 10,
+		Bwidth => 128
+	)
+	port map(
+		-- system interface
+		clk => clk,
+		rst => rst,
+		
+		-- bus interface
+		tx_sop => tx_sop(1),
+
+		Req => req(1),
+		tx => tx(1),
+		
+		-- Mem interface
+		mD => ramRD,
+		
+		mAddr => ramRA
+		mren => ramRen
+		
+		-- Local Bus interface
+		header => DMA1H,
+		laddr => DMA1A,
+		Req_in => DMA1_Req,  
+		busy => DMA1_busy
+	);
+
+INEP0:EPMEMIN
+	generic(
+		Awidth => 10,
+		Bwidth => 128,
+		cs_len => 2,
+		CS => "00"
+	);
+	port(
+		-- system interface
+		clk => clk,
+		rst => rst,
+		
+		-- bus interface
+		rx_sop => rx_sop(0),
+		rx => rx(0),
+		
+		-- Mem interface
+		Addr => viewA,
+		D => viewD,
+		wen => viewen
+		-- 
+		);
+
+INEP1:EPMEMIN
+	generic(
+		Awidth => 10,
+		Bwidth => 128,
+		cs_len => 2,
+		CS => "00"
+	);
+	port(
+		-- system interface
+		clk => clk,
+		rst => rst,
+		
+		-- bus interface
+		rx_sop => rx_sop(1),
+		rx => rx(1),
+		
+		-- Mem interface
+		Addr => ramWA,
+		D => ramWD,
+		wen => ramWen
+		-- 
+		);
+
+DMA0:DMANP
+	generic map( 
+		Bwidth => 128,
+		SAwidth => 10,
+		DAwidth => 12
+		Lwidth => 10
+		)
+	port map(
+		-- system signal
+		clk => clk,
+		rst => rst,
+		
+		-- Tx interface
+		header => DMA0H,
+		Req => DMA0_Req,
+		laddr => DMA0A,
+		
+		busy => DMA0_Busy,
+		tx_sop => tx_sop(0),
+		
+		-- CPU bus
+		CS => CS0,
+		wr => wrd
+		rd => rd,
+		addr => addr( 3 downto 0 ),
+		Din => Din,
+		Dout => Dout0,
+		cpuClk => cpuClk,
+		
+		-- Priority 
+		en => 1
+		);
+
+DMA1:DMANP
+	generic map( 
+		Bwidth => 128,
+		SAwidth => 10,
+		DAwidth => 12
+		Lwidth => 10
+		)
+	port map(
+		-- system signal
+		clk => clk,
+		rst => rst,
+		
+		-- Tx interface
+		header => DMA1H,
+		Req => DMA1_Req,
+		laddr => DMA1A,
+		
+		busy => DMA0_Busy,
+		tx_sop => tx_sop(1),
+		
+		-- CPU bus
+		CS => CS1,
+		wr => wrd
+		rd => rd,
+		addr => addr( 3 downto 0 ),
+		Din => Din,
+		Dout => Dout1,
+		cpuClk => cpuClk,
+		
+		-- Priority 
+		en => 1
+		);
+		
+ep1ram : blockdram
+	generic map( 
+		depth:	integer	:= 1024,
+		Dwidth: integer	:= 128,
+		Awidth:	integer	:= 10
+		)
+	port map(
+		addra => ramWA,
+		clka => clk,
+		addrb => ramRA
+		clkb => clk,
+		dia => ramWD,
+		wea => ramWen,
+		reb => ramRen,
+		dob => ramRD
+		);
+
+ep0src:DUMMYSRC
+	generic map(
+		Awidth => 10,
+		Bwidth => 128
+	)
+	port map(
+		-- system
+		clk => clk,
+		rst => rst,
+
+		Addr => dummyA,
+		Q => dummyD,
+		ren => dummyen
+	);
+viewAout<=viewA;
+viewDout<=viewD( 9 downto 0 );
+viewenout <= viewen;
 end behave;
