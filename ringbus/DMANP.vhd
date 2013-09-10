@@ -73,7 +73,7 @@ architecture behave of DMANP is
 	
 	signal saddr, saddr_cpu : std_logic_vector( SAwidth-1 downto 0 ) := (others=>'0');
 	signal daddr, daddr_cpu : std_logic_vector( DAwidth-1 downto 0 ) := (others=>'0');
-	signal len, len_cpu : std_logic_vector( DAwidth-1 downto 0 ) := (others=>'0');
+	signal len, len_cpu : std_logic_vector( Lwidth-1 downto 0 ) := (others=>'0');
 
 	signal req_cpu : std_logic := '0';
 	signal state : natural := 0;
@@ -99,12 +99,12 @@ end component;
 		
 begin
 
-header <= zeros( Bwidth-1 downto 0 );
+--header <= zeros( Bwidth-1 downto 0 );
 
 cs_wr <= cs and wr;
 
 -- command = command_write
-inCommand <= command_write;
+-- inCommand <= command_write;
 
 header( command_end downto command_start ) <= inCommand;
 
@@ -179,7 +179,7 @@ begin
 				elsif len > max_payload then
 					inLen<=zeros(len_length downto 0)+max_payload;
 				else
-					inLen<=len;
+					inLen<=len(len_length downto 0);
 				end if;
 				req<='1';
 				state<=state_SENDING;

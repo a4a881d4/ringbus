@@ -71,8 +71,8 @@ begin
 			and rx( command_end downto command_start )=command_write 
 			and rx( addr_start+Awidth+cs_len-1 downto addr_start+Awidth )=CS 
 			then
-			addr_i<=rx( addr_start+Awidth-1 downto 0 );
-			lenc<=rx( len_start+len_length-1 downto 0 )-1;
+			addr_i<=rx( addr_start+Awidth-1 downto addr_start );
+			lenc<=rx( len_end downto len_start )-1;
 			hold<='1';
 		elsif lenc/=zeros( len_length-1 downto 0 ) then
 			lenc<=lenc-1;

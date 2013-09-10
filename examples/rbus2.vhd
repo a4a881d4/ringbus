@@ -46,7 +46,7 @@ entity RBUS2 is
 		
 		-- out 
 		viewAout : out std_logic_vector( 9 downto 0 ); 
-		viewDout : out std_logic_vector( 9 downto 0 );
+		viewDout : out std_logic_vector( 127 downto 0 );
 		viewenout : out std_logic 
 	);
 end RBUS2;
@@ -135,8 +135,8 @@ bus2:RBUS
 		tx_sop => tx_sop_i,
 		
 		-- rx
-		rx_sop => rx_i,
-		rx => rx_sop_i
+		rx_sop => rx_sop_i,
+		rx => rx_i
 		);
 
 outEP0:EPMEMOUT
@@ -339,7 +339,7 @@ ep0src:DUMMYSRC
 		ren => dummyen
 	);
 viewAout<=viewA;
-viewDout<=viewD( 9 downto 0 );
+viewDout<=viewD;
 viewenout <= viewen;
 
 cs0<='1' when addr( 7 downto 4 )="0000" else '0';

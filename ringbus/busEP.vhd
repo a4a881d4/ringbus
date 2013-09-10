@@ -74,7 +74,7 @@ rx_sop<=rx_sop_i;
 
 rx<=D;
 
-usedP:process(fin,inDBus,inAddr,Req)
+usedP:process(fin,inDBus,inAddr,Req, inCommand )
 begin
 	if fin='1' then 
 		if inDBus=zeros(dbusid_end downto dbusid_start) and inAddr=POS and inCommand/=command_idle then 
