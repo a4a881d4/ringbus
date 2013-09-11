@@ -49,7 +49,7 @@ end AAI;
 
 architecture behave of AAI is
 
-signal start : natural range 0 to width-1;
+signal start : natural range 0 to width+7;
 signal D : std_logic_vector( 127 downto 0 );
 
 begin

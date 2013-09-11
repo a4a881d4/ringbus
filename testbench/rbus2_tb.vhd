@@ -49,7 +49,7 @@ component RBUS2
 		
 		-- out 
 		viewAout : out std_logic_vector( 9 downto 0 ); 
-		viewDout : out std_logic_vector( 9 downto 0 );
+		viewDout : out std_logic_vector( 127 downto 0 );
 		viewenout : out std_logic 
 	);
 end component;
@@ -64,14 +64,14 @@ signal Din : std_logic_vector( 7 downto 0 );
 signal Dout : std_logic_vector( 7 downto 0 );
 signal cpuClk : std_logic :='0';
 signal viewAout : std_logic_vector( 9 downto 0 ); 
-signal viewDout : std_logic_vector( 9 downto 0 );
+signal viewDout : std_logic_vector( 127 downto 0 );
 signal viewenout : std_logic :='0'; 
 
 begin
 
 cpu:dspemulator
 	generic map( 
-		DSP_INC_FILE => "rbus2.inc",
+		DSP_INC_FILE => "rbus2.inx",
 		ABUS_WIDTH => 8,
 		DBUS_WIDTH => 8 )
 	port map(
@@ -101,9 +101,9 @@ ttu:RBUS2
 		viewDout => viewDout,
 		viewenout => viewenout 
 	);	
-	wr<=dspwr and dspce;
+	wr<=not ( dspwr );
 	
 	rst <= '1', '0' after 10ns;
-	clk <= not clk after 5ns;
+	clk <= not clk after 1ns;
 	
 end sim;

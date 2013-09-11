@@ -74,24 +74,8 @@ rx_sop<=rx_sop_i;
 
 rx<=D;
 
-usedP:process(fin,inDBus,inAddr,Req, inCommand )
-begin
-	if fin='1' then 
-		if inDBus=zeros(dbusid_end downto dbusid_start) and inAddr=POS and inCommand/=command_idle then 
-			rx_sop_i<='1';
-		else
-			rx_sop_i<='0';
-		end if;
-		if Req='1' and ( inCommand=command_idle or rx_sop_i='1') then
-			tx_sop_i<='1';
-		else
-			tx_sop_i<='0';
-		end if;
-	else
-		tx_sop_i<='0';
-		rx_sop_i<='0';
-	end if;
-end process;
+rx_sop_i<='1' when fin='1' and inDBus=zeros(dbusid_end downto dbusid_start) and inAddr=POS and inCommand/=command_idle else '0';
+tx_sop_i<='1' when fin='1' and  Req='1' and ( inCommand=command_idle or rx_sop_i='1') else '0';
 
 busP:process(clk,rst)
 begin

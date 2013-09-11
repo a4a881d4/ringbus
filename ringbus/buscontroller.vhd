@@ -49,7 +49,6 @@ architecture behave of BUSCONTROLLER is
 	signal counter : integer := 0;
 	signal inDBUS, outDBUS : std_logic_vector( dbusid_end downto dbusid_start ) := (others => '0');
 	signal inAddr, outAddr : std_logic_vector( daddr_end downto daddr_start ) := (others => '0');
-	signal inUsed, outUsed : std_logic := '0';
 	signal inCommand,outCommand : std_logic_vector( command_end downto command_start ) := (others => '0');
 begin
 
@@ -59,16 +58,16 @@ inAddr <= D( daddr_end downto daddr_start );
 inDBus <= D( dbusid_end downto dbusid_start );
 outAddr<=inAddr;
 
-busCheck:process( fin, inUsed,inAddr,inDBus )
+busCheck:process( fin,inAddr,inDBus,inCommand )
 begin
 	if fin='1' then
-		if inCommand=command_idle then
+		if inCommand/=command_idle then
 			if inDBus/=zeros(dbusid_end downto dbusid_start) then
 				outDBus<=(others => '0');
-				outCommand<=inCommand;
+				outCommand<=command_idle;
 			elsif inAddr>Num then
 				outDBus<=(others => '0');
-				outCommand<=inCommand;
+				outCommand<=command_idle;
 			else
 				outDBus<=inDBus;
 				outCommand<=inCommand;

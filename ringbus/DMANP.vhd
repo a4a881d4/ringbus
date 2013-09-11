@@ -42,9 +42,9 @@ entity DMANP is
 		rst : in STD_LOGIC;
 		
 		-- Tx interface
-		header: out std_logic_vector(Bwidth-1 downto 0);
+		header: out std_logic_vector(Bwidth-1 downto 0) := (others=>'0');
 		Req : out std_logic;
-		laddr : out std_logic_vector(SAwidth-1 downto 0);
+		laddr : out std_logic_vector(SAwidth-1 downto 0) := (others=>'0');
 		
 		busy : in std_logic;
 		tx_sop : in std_logic;
@@ -174,15 +174,17 @@ begin
 				inCommand <= command_write;
 				req<='0';
 			when state_LOADING =>
-				if len=zeros( Lwidth-1 downto 0 ) then
-					state<=state_END;
-				elsif len > max_payload then
+				if len > max_payload then
 					inLen<=zeros(len_length downto 0)+max_payload;
 				else
 					inLen<=len(len_length downto 0);
 				end if;
 				req<='1';
-				state<=state_SENDING;
+				if len=zeros( Lwidth-1 downto 0 ) then
+					state<=state_END;
+				else
+					state<=state_SENDING;
+				end if;
 			when state_SENDING =>
 				if en='1' and tx_sop='1' then
 					saddr<=saddr+len;
