@@ -105,5 +105,13 @@ ttu:RBUS2
 	
 	rst <= '1', '0' after 10ns;
 	clk <= not clk after 1ns;
-	
 end sim;
+	
+
+configuration speed of rbus2_tb is
+	for sim
+		for ttu : rbus2 use configuration WORK.speedrbus;
+		end for;
+	end for;
+end speed;
+	

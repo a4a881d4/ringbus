@@ -347,4 +347,11 @@ cs1<='1' when addr( 7 downto 4 )="0001" else '0';
 
 dout<=dout0 when cs0='1' else ( others=>'Z' );
 
-end behave;
+end behave;	
+
+configuration speedrbus of rbus2 is
+	for behave
+		for outEP0:EPMEMOUT use entity WORK.epmemout(fast);
+		end for;
+	end for;
+end speedrbus;
