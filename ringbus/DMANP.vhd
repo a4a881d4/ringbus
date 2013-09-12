@@ -187,8 +187,8 @@ begin
 				end if;
 			when state_SENDING =>
 				if en='1' and tx_sop='1' then
-					saddr<=saddr+len;
-					daddr<=daddr+len;
+					saddr<=saddr+inLen;
+					daddr<=daddr+inLen;
 					len<=len-inLen;
 					state<=state_LOADING;
 					req<='0';

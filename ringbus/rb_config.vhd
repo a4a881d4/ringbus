@@ -68,6 +68,14 @@ package rb_config is
 	--
 	
 	type busgroup is array( natural range<>, natural range<>) of STD_LOGIC;
+	
+	-- OUT End Point State Mechine
+	constant outepS_idle	: natural :=0;
+	constant outepS_pending	: natural :=1;
+	constant outepS_ready	: natural :=2;
+	constant outepS_trans	: natural :=3;
+	constant outepS_end		: natural :=4;
+	
 
 component RBUS is
 	generic( 

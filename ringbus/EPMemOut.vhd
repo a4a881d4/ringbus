@@ -14,13 +14,18 @@
 --
 ---------------------------------------------------------------------------------------------------
 --
--- Description : Ring bus end point Send from Mem
+-- Description : Ring bus end point Send from Mem 
+--
+-- 		assume RAM has one clock delay from addr to data
 --
 -- Rev: 3.1
 --
 ---------------------------------------------------------------------------------------------------
-
-
+--
+--	Todo:
+--		1. add speed level to module															   
+--
+---------------------------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.std_logic_arith.all;
@@ -64,25 +69,11 @@ architecture behave of EPMEMOUT is
 	signal addr_i : std_logic_vector( Awidth-1 downto 0 ) := (others => '0');
 	signal lenc : std_logic_vector( len_length-1 downto 0 ) := (others => '0');
 	signal hold : std_logic := '0';
-	signal req_p: std_logic := '0';
-	signal req_d1:std_logic := '0';
-begin
+	signal state: natural range 0 to 4;
+	
+begin									
 
-reqP:process(clk,rst)
-begin
-	if rst='1' then
-		req_p<='0';
-	elsif rising_edge(clk) then
-		req_d1<=req_in;
-		if req_d1='0' and req_in='1' then
-			req_p<='1';
-		else
-			req_p<='0';
-		end if;
-	end if;
-end process;
-		
-sopP:process(clk,rst)
+FSM:process(clk,rst)
 begin
 	if rst='1' then
 		addr_i<=(others => '0');
@@ -91,29 +82,47 @@ begin
 		req<='0';
 		mren<='0';
 		busy<='0';
+		state<=outepS_idle;
 	elsif rising_edge(clk) then
-		if req_p='1' then
-			req<='1';
-			addr_i<=laddr;
-			mren<='1';
-			lenc<=header( len_end downto len_start )-1;
-			hold<='0';
-			busy<='1';
-		elsif tx_sop='1' then
-			req<='0';
-			addr_i<=addr_i+1;
-			lenc<=lenc-1;
-			hold<='1';
-		elsif lenc/=zeros( len_length-1 downto 0 ) 
-			and hold='1'
-			then
-			addr_i<=addr_i+1;
-			lenc<=lenc-1;
-		elsif lenc=zeros( len_length-1 downto 0 ) then
-			hold<='0';
-			mren<='0';
-			busy<='0';
-		end if;
+		case state is
+			when outepS_idle =>
+				if req_in='1' then
+					state<=outepS_pending;
+				end if;
+			when outepS_pending =>
+				req<='1';
+				addr_i<=laddr;
+				lenc<=header( len_end downto len_start )-1;
+				busy<='1';
+				mren<='1';
+				state<=outepS_ready;
+			when outepS_ready =>
+				if tx_sop='1' then
+					req<='0';
+					addr_i<=addr_i+1;
+					lenc<=lenc-1;
+					hold<='1';
+					state<=outepS_trans;
+				end if;
+			when outepS_trans =>
+				if lenc/=zeros( len_length-1 downto 0 ) then
+					addr_i<=addr_i+1;
+					lenc<=lenc-1;
+				end if;
+				if lenc=zeros( len_length-1 downto 0 ) then
+					hold<='0';
+					busy<='0';
+					if req_in='0' then
+						state<=outepS_idle;
+					else
+						state<=outepS_pending;
+					end if;
+					mren<='0';
+				end if;
+			when outepS_end =>
+			when others =>
+				null;
+		end case;
 	end if;
 end process;
 
