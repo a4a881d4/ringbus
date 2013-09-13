@@ -45,6 +45,8 @@ package rb_config is
 	
 	constant command_idle		: std_logic_vector( command_length-1 downto 0 )	:= zeros( command_length-1 downto 0 );
 	constant command_write		: std_logic_vector( command_length-1 downto 0 )	:= "10";
+	constant command_read		: std_logic_vector( command_length-1 downto 0 )	:= "01";
+	constant command_complete	: std_logic_vector( command_length-1 downto 0 )	:= "11";
 
 	constant Slot				: natural := 33;
 
@@ -69,13 +71,17 @@ package rb_config is
 	
 	type busgroup is array( natural range<>, natural range<>) of STD_LOGIC;
 	
-	-- OUT End Point State Mechine
-	constant outepS_idle	: natural :=0;
-	constant outepS_pending	: natural :=1;
-	constant outepS_ready	: natural :=2;
-	constant outepS_trans	: natural :=3;
-	constant outepS_end		: natural :=4;
+	-- State Mechine
 	
+	constant state_IDLE 	: natural := 0;
+	constant state_PENDING	: natural := 1;
+	constant state_LOADING	: natural := 2;
+	constant state_READY	: natural := 3;
+	constant state_ADDR		: natural := 4;
+	constant state_DATA		: natural := 5;
+	constant state_RECV		: natural := 6;
+	constant state_SENDING	: natural := 7;
+	constant state_END		: natural := 8;
 
 component RBUS is
 	generic( 

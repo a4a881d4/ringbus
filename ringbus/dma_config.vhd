@@ -39,12 +39,6 @@ package dma_config is
 	--
 	constant reg_BUSY		: std_logic_vector( 3 downto 0 )	:= "0000";
 	
-	constant state_IDLE 	: natural := 0;
-	constant state_PENDING	: natural := 1;
-	constant state_LOADING	: natural := 2;
-	constant state_SENDING	: natural := 3;
-	constant state_END		: natural := 4;
-	
 	constant max_payload	: natural := 32;
 
 component DMANP
