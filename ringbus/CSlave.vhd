@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 --
--- Title       : Controll Bus Slave
+-- Title       : Control Bus Slave
 -- Design      : Ring Bus
 -- Author      : Zhao Ming
 -- Company     : a4a881d4
@@ -14,7 +14,7 @@
 --
 ---------------------------------------------------------------------------------------------------
 --
--- Description : Controll bus Slave
+-- Description : Control bus Slave
 --
 -- Rev: 3.1	
 -- 			rd signal ahead data one clock

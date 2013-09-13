@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 --
--- Title       : Two End Point Example for Ring Controll Bus
+-- Title       : Two End Point Example for Ring Control Bus
 -- Design      : Ring Bus
 -- Author      : Zhao Ming
 -- Company     : a4a881d4
@@ -14,7 +14,7 @@
 --
 ---------------------------------------------------------------------------------------------------
 --
--- Description : Ring Controll bus example
+-- Description : Ring Control bus example
 --               two end point
 -- 
 -- Rev: 3.1

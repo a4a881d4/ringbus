@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 --
--- Title       : Controll Bus Master
+-- Title       : Control Bus Master
 -- Design      : Ring Bus
 -- Author      : Zhao Ming
 -- Company     : a4a881d4
@@ -14,7 +14,7 @@
 --
 ---------------------------------------------------------------------------------------------------
 --
--- Description : Controll bus master
+-- Description : Control bus master
 --
 -- Rev: 3.1
 --
@@ -125,7 +125,7 @@ cs_wr <= cs and wr;
 ADDR_AAI:AAI
 	generic map( 
 		width => Bwidth,
-		Baddr => reg_Controll_ADDR
+		Baddr => reg_Control_ADDR
 		)
 	port map(
 		rst => rst,
@@ -141,7 +141,7 @@ ADDR_AAI:AAI
 DATA_AAI:AAI
 	generic map( 
 		width => Bwidth,
-		Baddr => reg_Controll_DATA
+		Baddr => reg_Control_DATA
 		)
 	port map(
 		rst => rst,
@@ -182,15 +182,15 @@ begin
 	elsif rising_edge(cpuClk) then
 		if cs_wr='1' then
 			case addr is
-				when reg_Controll_BADDR =>
+				when reg_Control_BADDR =>
 					inAddr<=Din( addr_length-1 downto 0 );
-				when reg_Controll_BID =>
+				when reg_Control_BID =>
 					inDBUSID<=Din( busid_length-1 downto 0 );
-				when reg_Controll_Tag =>
+				when reg_Control_Tag =>
 					inTag<=Din( len_length-1 downto 0 );
-				when reg_Controll_rdTag =>
+				when reg_Control_rdTag =>
 					rdTag<=Din( len_length-1 downto 0 );
-				when reg_Controll_Command =>
+				when reg_Control_Command =>
 					inCommand<=Din( command_length-1 downto 0 );
 				when others =>	
 					null;
@@ -200,7 +200,7 @@ begin
 	if tstate=state_loading then
 		req_cpu<='0';
 	elsif rising_edge(cpuClk) then
-		if cs_wr='1' and addr=reg_Controll_START then 
+		if cs_wr='1' and addr=reg_Control_START then 
 			req_cpu<='1';
 		end if;
 	end if;
@@ -297,13 +297,13 @@ rdP:process(rd,addr,cs,rdTag)
 begin
 	if rd='1' and cs='1' then
 		case addr is
-			when reg_Controll_Busy =>
+			when reg_Control_Busy =>
 				Dout(0)<=busy_i;
 				Dout( 7 downto 1 )<=(others=>'Z');
-			when reg_Controll_TagState =>
+			when reg_Control_TagState =>
 				Dout(0)<=TagState(conv_integer(rdTag));
 				Dout( 7 downto 1 )<=(others=>'Z');
-			when reg_Controll_TagData =>
+			when reg_Control_TagData =>
 				Dout<=TagData( 7 downto 0 );
 			when others =>
 				Dout<=(others=>'Z');
