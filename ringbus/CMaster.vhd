@@ -28,12 +28,13 @@ use IEEE.std_logic_unsigned.all;
 
 library	work;
 use work.rb_config.all;
+use work.contr_config.all;
 
 entity CMaster is
 	generic( 
 		Bwidth : natural := 16;
 		POS : natural := 0;
-		MyBus : natural := 0
+		MyBusID : natural := 0
 		);
 	port(
 		-- system
@@ -52,7 +53,7 @@ entity CMaster is
 		
 		-- Local Bus 
 		CS : in std_logic;
-		addr : in std_logic_vector(7 downto 0);
+		addr : in std_logic_vector(3 downto 0);
 		Din : in STD_LOGIC_VECTOR(7 downto 0);
 		Dout : out STD_LOGIC_VECTOR(7 downto 0);
 		cpuClk : in std_logic;
@@ -71,7 +72,7 @@ signal inCommand : std_logic_vector( command_end downto command_start ) := (othe
 signal inDBUSID : std_logic_vector( dbusid_end downto dbusid_start ) := (others => '0');
 signal inAddr : std_logic_vector( daddr_end downto daddr_start ) := (others => '0');
 
-signal inTag, returnTag, rdTag : std_logic_vector( len_length downto 0 ) := ( others=>'0' );
+signal inTag, returnTag, rdTag : std_logic_vector( len_length-1 downto 0 ) := ( others=>'0' );
 signal TagState : std_logic_vector( 2**len_length-1 downto 0 ) := ( others=>'0' );
 signal req_cpu : std_logic := '0';
 signal tstate,rstate : natural := 0;
@@ -98,6 +99,25 @@ component AAI
 		Q : out std_logic_vector( width-1 downto 0 ) 
 		);
 end component;
+
+component blockdram
+	generic( 
+		depth:	integer	:= 256;
+		Dwidth: integer	:= 8;
+		Awidth:	integer	:= 8
+		);
+	port(
+		addra: IN std_logic_VECTOR(Awidth-1 downto 0);
+		clka: IN std_logic;
+		addrb: IN std_logic_VECTOR(Awidth-1 downto 0);
+		clkb: IN std_logic;
+		dia: IN std_logic_VECTOR(Dwidth-1 downto 0);
+		wea: IN std_logic;
+		reb: IN std_logic;
+		dob: OUT std_logic_VECTOR(Dwidth-1 downto 0)	:= (others => '0')
+		);
+end component;
+
 begin
 
 cs_wr <= cs and wr;
@@ -151,7 +171,7 @@ tagmem:blockdram
 		dob => TagData
 		);
 
-cpuwriteP:process( cpuClk, rst )
+cpuwriteP:process( cpuClk, rst, tstate )
 begin
 	if rst='1' then
 		inAddr<=( others=>'0' );
@@ -159,7 +179,6 @@ begin
 		inCommand<=( others=>'0' );
 		inTag<=( others=>'0' );
 		rdTag<=( others=>'0' );
-		req_cpu<='0';
 	elsif rising_edge(cpuClk) then
 		if cs_wr='1' then
 			case addr is
@@ -173,20 +192,34 @@ begin
 					rdTag<=Din( len_length-1 downto 0 );
 				when reg_Controll_Command =>
 					inCommand<=Din( command_length-1 downto 0 );
-				when reg_START => 
-					req_cpu<='1';
 				when others =>	
 					null;
 			end case;
 		end if;
-		if rd='1' then
-			
-		if req_cpu='1' then
-			req_cpu<='0';
+	end if;
+	if tstate=state_loading then
+		req_cpu<='0';
+	elsif rising_edge(cpuClk) then
+		if cs_wr='1' and addr=reg_Controll_START then 
+			req_cpu<='1';
 		end if;
 	end if;
-end process;				
+end process;
 
+TagStateP:process(clk,rst)
+begin
+	if rst='1' then
+		TagState<=( others=>'0' );
+	elsif rising_edge(clk) then
+		if tstate=state_ADDR and inCommand=command_read then
+			TagState(conv_integer(inTag))<='1';
+		end if;
+		if tagen='1' then
+			TagState(conv_integer(returnTag))<='0';
+		end if;									 
+	end if;
+end process;
+		
 FSMT:process(clk,rst)
 begin
 	if rst='1' then
@@ -195,7 +228,7 @@ begin
 		busy_i<='0';
 		tx <= zeros( Bwidth-1 downto 0 );
 	elsif rising_edge(clk) then
-		case state is
+		case tstate is
 			when state_IDLE =>
 				if req_cpu='1' then
 					tstate<=state_LOADING;
@@ -205,7 +238,7 @@ begin
 				end if;
 				req<='0';
 			when state_LOADING =>
-				tx( comand_end downto command_start )<=inCommand;
+				tx( command_end downto command_start )<=inCommand;
 				tx( dbusid_end downto dbusid_start )<=inDBUSID;
 				tx( daddr_end downto daddr_start )<=inAddr;
 				tx( len_end downto len_start ) <= zeros(len_end downto len_start)+2;
@@ -221,8 +254,8 @@ begin
 				if inCommand=command_write then
 					tx<=word3_cpu;
 				else
-					tx( comand_end downto command_start )<=command_complete;
-					tx( dbusid_end downto dbusid_start )<=zeros( dbusid_end downto dbusid_start )+MyBUSID;
+					tx( command_end downto command_start )<=command_complete;
+					tx( dbusid_end downto dbusid_start )<=zeros( dbusid_end downto dbusid_start )+MyBusID;
 					tx( daddr_end downto daddr_start )<=zeros( daddr_end downto daddr_start )+POS;
 					tx( len_end downto len_start )<=inTag;
 				end if;
@@ -244,11 +277,11 @@ begin
 	elsif rising_edge(clk) then
 		case rstate is
 			when state_IDLE =>
-				if rx_sop='1' then
+				if rx_sop='1' and rx( command_end downto command_start )=command_complete then
 					rstate<=state_ADDR;
 					tagen<='0';
 				end if;
-				tagen<='0'
+				tagen<='0';
 			when state_ADDR =>
 				returnTag<=rx( len_end downto len_start );
 				tagen<='1';
@@ -266,12 +299,12 @@ begin
 		case addr is
 			when reg_Controll_Busy =>
 				Dout(0)<=busy_i;
-				Dout( Bwidth-1 downto 0 )<=(others=>'Z');
+				Dout( 7 downto 1 )<=(others=>'Z');
 			when reg_Controll_TagState =>
-				Dout(0)<=TagState(rdTag);
-				Dout( Bwidth-1 downto 0 )<=(others=>'Z');
+				Dout(0)<=TagState(conv_integer(rdTag));
+				Dout( 7 downto 1 )<=(others=>'Z');
 			when reg_Controll_TagData =>
-				Dout<=TagData;
+				Dout<=TagData( 7 downto 0 );
 			when others =>
 				Dout<=(others=>'Z');
 		end case;

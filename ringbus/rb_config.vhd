@@ -79,9 +79,10 @@ package rb_config is
 	constant state_READY	: natural := 3;
 	constant state_ADDR		: natural := 4;
 	constant state_DATA		: natural := 5;
-	constant state_RECV		: natural := 6;
-	constant state_SENDING	: natural := 7;
-	constant state_END		: natural := 8;
+	constant state_trans	: natural := 6;
+	constant state_RECV		: natural := 7;
+	constant state_SENDING	: natural := 8;
+	constant state_END		: natural := 9;
 
 component RBUS is
 	generic( 

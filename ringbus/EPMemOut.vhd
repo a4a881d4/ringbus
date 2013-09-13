@@ -70,7 +70,7 @@ architecture fast of EPMEMOUT is
 	signal addr_i : std_logic_vector( Awidth-1 downto 0 ) := (others => '0');
 	signal lenc : std_logic_vector( len_length-1 downto 0 ) := (others => '0');
 	signal hold : std_logic := '0';
-	signal state: natural range 0 to 4;
+	signal state: natural;
 	
 begin									
 
@@ -83,29 +83,29 @@ begin
 		req<='0';
 		mren<='0';
 		busy<='0';
-		state<=outepS_idle;
+		state<=state_idle;
 	elsif rising_edge(clk) then
 		case state is
-			when outepS_idle =>
+			when state_idle =>
 				if req_in='1' then
-					state<=outepS_pending;
+					state<=state_pending;
 				end if;
-			when outepS_pending =>
+			when state_pending =>
 				req<='1';
 				addr_i<=laddr;
 				lenc<=header( len_end downto len_start )-1;
 				busy<='1';
 				mren<='1';
-				state<=outepS_ready;
-			when outepS_ready =>
+				state<=state_ready;
+			when state_ready =>
 				if tx_sop='1' then
 					req<='0';
 					addr_i<=addr_i+1;
 					lenc<=lenc-1;
 					hold<='1';
-					state<=outepS_trans;
+					state<=state_trans;
 				end if;
-			when outepS_trans =>
+			when state_trans =>
 				if lenc/=zeros( len_length-1 downto 0 ) then
 					addr_i<=addr_i+1;
 					lenc<=lenc-1;
@@ -114,13 +114,12 @@ begin
 					hold<='0';
 					busy<='0';
 					if req_in='0' then
-						state<=outepS_idle;
+						state<=state_idle;
 					else
-						state<=outepS_pending;
+						state<=state_pending;
 					end if;
 					mren<='0';
 				end if;
-			when outepS_end =>
 			when others =>
 				null;
 		end case;
@@ -137,7 +136,7 @@ architecture speed of EPMEMOUT is
 	signal addr_i : std_logic_vector( Awidth-1 downto 0 ) := (others => '0');
 	signal lenc : std_logic_vector( len_length-1 downto 0 ) := (others => '0');
 	signal hold : std_logic := '0';
-	signal state: natural range 0 to 4;
+	signal state: natural;
 	signal delaycount : natural range 0 to speed+1;
 begin									
 
@@ -150,30 +149,30 @@ begin
 		req<='0';
 		mren<='0';
 		busy<='0';
-		state<=outepS_idle;
+		state<=state_idle;
 		delaycount<=0;
 	elsif rising_edge(clk) then
 		case state is
-			when outepS_idle =>
+			when state_idle =>
 				if req_in='1' then
-					state<=outepS_pending;
+					state<=state_pending;
 				end if;
-			when outepS_pending =>
+			when state_pending =>
 				req<='1';
 				addr_i<=laddr;
 				lenc<=header( len_end downto len_start )-1;
 				busy<='1';
 				mren<='1';
-				state<=outepS_ready;
-			when outepS_ready =>
+				state<=state_ready;
+			when state_ready =>
 				if tx_sop='1' then
 					req<='0';
 					addr_i<=addr_i+1;
 					lenc<=lenc-1;
 					hold<='1';
-					state<=outepS_trans;
+					state<=state_trans;
 				end if;
-			when outepS_trans =>
+			when state_trans =>
 				if lenc/=zeros( len_length-1 downto 0 ) then
 					addr_i<=addr_i+1;
 					lenc<=lenc-1;
@@ -181,13 +180,13 @@ begin
 				if lenc=zeros( len_length-1 downto 0 ) then
 					hold<='0';
 					busy<='0';
-					state<=outepS_end;
+					state<=state_end;
 					mren<='0';
 				end if;
 				delaycount<=0;
-			when outepS_end =>
+			when state_end =>
 				if delaycount=speed then
-					state<=outepS_idle;
+					state<=state_idle;
 				else
 					delaycount<=delaycount+1;
 				end if;
