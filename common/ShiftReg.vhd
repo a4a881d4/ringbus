@@ -21,7 +21,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-Library synplify;
+--Library synplify;
 
 
 entity ShiftReg is
