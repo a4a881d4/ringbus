@@ -349,9 +349,4 @@ dout<=dout0 when cs0='1' else ( others=>'Z' );
 
 end behave;	
 
-configuration speedrbus of rbus2 is
-	for behave
-		for outEP0:EPMEMOUT use entity WORK.epmemout(fast);
-		end for;
-	end for;
-end speedrbus;
+

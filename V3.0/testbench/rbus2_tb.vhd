@@ -106,10 +106,4 @@ ttu:RBUS2
 end sim;
 	
 
-configuration speed of rbus2_tb is
-	for sim
-		for ttu : rbus2 use configuration WORK.speedrbus;
-		end for;
-	end for;
-end speed;
-	
+

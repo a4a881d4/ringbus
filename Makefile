@@ -7,25 +7,32 @@ all : elab
 
 # Elaborate target.  Almost useless
 elab : force
-	$(GHDL) -c $(GHDLFLAGS) -e speed
+	$(GHDL) -c $(GHDLFLAGS) -e rbus2_tb
 
 # Run target
 run : force
-	$(GHDL) -c $(GHDLFLAGS) -r speed $(GHDLRUNFLAGS)
+	$(GHDL) -r rbus2_tb $(GHDLRUNFLAGS)
 
 # Targets to analyze libraries
 init: force
 
 force:
-	$(GHDL) -i $(GHDLFLAGS) --work=simio simio/simio.vhd
-	$(GHDL) -i $(GHDLFLAGS) --work=simio simio/*.vhd
-	$(GHDL) -i $(GHDLFLAGS) common/*.vhd
-	$(GHDL) -i $(GHDLFLAGS) V3.0/ringbus/rb_config.vhd
-	$(GHDL) -i $(GHDLFLAGS) V3.0/ringbus/dma_config.vhd
-	$(GHDL) -i $(GHDLFLAGS) V3.0/ringbus/contr_config.vhd
-	$(GHDL) -i $(GHDLFLAGS) V3.0/ringbus/*.vhd
-	$(GHDL) -i $(GHDLFLAGS) V3.0/examples/*.vhd
-	$(GHDL) -i $(GHDLFLAGS) V3.0/testbench/*.vhd
+	$(GHDL) -a $(GHDLFLAGS) --work=simio simio/simio.vhd
+	$(GHDL) -a $(GHDLFLAGS) --work=simio simio/dspemulator.vhd
+	$(GHDL) -a $(GHDLFLAGS) common/*.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/rb_config.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/dma_config.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/contr_config.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/EPMemOut.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/EPMemIn.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/rbus.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/DMANP.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/buscontroller.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/busEP.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/ringbus/AAI.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/examples/*.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/examples/rbus2.vhd
+	$(GHDL) -a $(GHDLFLAGS) V3.0/testbench/rbus2_tb.vhd
 
 clean:
 	rm work/*

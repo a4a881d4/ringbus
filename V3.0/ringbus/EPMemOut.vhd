@@ -65,8 +65,10 @@ entity EPMEMOUT is
 		);
 end EPMEMOUT;
 
-architecture fast of EPMEMOUT is
+architecture behave of EPMEMOUT is
+begin
 
+fast_g: if speed=0 generate
 	signal addr_i : std_logic_vector( Awidth-1 downto 0 ) := (others => '0');
 	signal lenc : std_logic_vector( len_length-1 downto 0 ) := (others => '0');
 	signal hold : std_logic := '0';
@@ -129,10 +131,9 @@ end process;
 maddr<=addr_i;
 tx<=header when tx_sop='1' else mD;
 
-end fast;
+end generate fast_g;
 
-architecture speed of EPMEMOUT is
-
+speed_g: if speed/=0 generate
 	signal addr_i : std_logic_vector( Awidth-1 downto 0 ) := (others => '0');
 	signal lenc : std_logic_vector( len_length-1 downto 0 ) := (others => '0');
 	signal hold : std_logic := '0';
@@ -199,4 +200,7 @@ end process;
 maddr<=addr_i;
 tx<=header when tx_sop='1' else mD;
 
-end speed;
+end generate speed_g;
+
+end behave;
+
