@@ -22,8 +22,6 @@
 ---------------------------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-use IEEE.std_logic_arith.all;
-use IEEE.std_logic_unsigned.all;
 
 entity RBUS2_TB is
 end RBUS2_TB;
@@ -71,7 +69,7 @@ begin
 
 cpu:dspemulator
 	generic map( 
-		DSP_INC_FILE => "rbus2.inx",
+		DSP_INC_FILE => "V3.0/testbench/rbus2.inx",
 		ABUS_WIDTH => 8,
 		DBUS_WIDTH => 8 )
 	port map(
@@ -102,9 +100,9 @@ ttu:RBUS2
 		viewenout => viewenout 
 	);	
 	wr<=not ( dspwr );
-	
-	rst <= '1', '0' after 10ns;
-	clk <= not clk after 1ns;
+
+	rst <= '1', '0' after 10 ns;
+	clk <= not clk after 1 ns;
 end sim;
 	
 

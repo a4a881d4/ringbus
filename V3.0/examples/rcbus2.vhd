@@ -174,6 +174,6 @@ master:CMaster
 		-- 
 	);
 	
-	cs0<='1' when addr(7downto 4) = "0000" else '0';
+	cs0<='1' when addr(7 downto 4) = "0000" else '0';
 	
 end behave;

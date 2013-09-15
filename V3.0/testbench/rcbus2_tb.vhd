@@ -95,8 +95,8 @@ cbus2:RCBUS2
 	
 	wr<=(not dspwr) and (not w_r);
 	rd<=(not dspwr) and w_r;
-	rst <= '1', '0' after 10ns;
-	clk <= not clk after 1ns;
+	rst <= '1', '0' after 10 ns;
+	clk <= not clk after 1 ns;
 	
 end sim;
 	

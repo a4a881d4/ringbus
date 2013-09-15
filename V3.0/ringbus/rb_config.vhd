@@ -109,7 +109,8 @@ end component;
 component EPMEMOUT
 	generic(
 		Awidth : natural;
-		Bwidth : natural
+		Bwidth : natural;
+		speed : natural := 0
 	);
 	port(
 		-- system interface
