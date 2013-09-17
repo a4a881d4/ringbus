@@ -31,6 +31,7 @@ use work.dma_config.all;
 entity AAI is
 	generic( 
 		width : natural := 32;
+		CPUDBwidth : natural := 8;
 		Baddr : std_logic_vector( 3 downto 0 ) := "0000"
 		);
 	port(
@@ -40,7 +41,7 @@ entity AAI is
 		-- CPU bus
 		CS : in std_logic;
 		addr : in std_logic_vector( 3 downto 0 );
-		Din : in std_logic_vector( 7 downto 0 );
+		Din : in std_logic_vector( CPUDBwidth-1 downto 0 );
 		cpuClk : in std_logic;
 		
 		Q : out std_logic_vector( width-1 downto 0 ) 
@@ -49,8 +50,8 @@ end AAI;
 
 architecture behave of AAI is
 
-signal start : natural range 0 to width+7;
-signal D : std_logic_vector( 127 downto 0 );
+signal start : natural range 0 to width+CPUDBwidth-1;
+signal D : std_logic_vector( CPUDBwidth*32 downto 0 );
 
 begin
 writeP:process( cpuClk, rst )
@@ -60,11 +61,11 @@ begin
 		start<=0;
 	elsif rising_edge(cpuClk) then
 		if CS='1' then
-			if addr=reg_RESET then
+			if addr=reg_RESET and Din(0)='1' then
 				start<=0;
 			elsif addr=Baddr then
-				D( start+7 downto start )<=Din;
-				start<=start+8;
+				D( start+CPUDBwidth-1 downto start )<=Din;
+				start<=start+CPUDBwidth;
 			end if;
 		end if;
 	end if;

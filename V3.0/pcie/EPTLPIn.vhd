@@ -139,37 +139,7 @@ begin
 					end if;
 				when QW0DW1 =>
 						
-		if rx_sop='1' 
-			and rx( command_end downto command_start )=command_write 
-			then
-			wraddr_i<=zeros(4 downto 0);
-			TLPH_i(conv_integer(wrid_i))<='0' &
-                                RX_MEM_WR64_FMT_TYPE &
-                                '0' &
-                                Device_TC &
-                                "0000" &
-                                Device_TD &
-                                Device_EP &
-                                Device_ATTR &
-                                "00" &
-                                rx( len_end downto len_start )&"0000" &
-                                completer_id_i &
-                                Device_WR_TAG &
-								"11111111" &
-								rx( addr_start+Awidth-1 downto addr_start )
-								;
-			lenc<=rx( len_end downto len_start )-1;
-			hold<='1';
-		elsif lenc/=zeros( len_length-1 downto 0 ) then
-			lenc<=lenc-1;
-			wraddr_i<=addr_i+1;
-			THPD_i(conv_integer(wrid_i&wraddr_i))<=rx;
-		else
-			if wrid_i+1 /= rdid_i then
-				wrid_i<=wrid_i+1;
-			else
-				errcnt<=errcnt+1;
-			end if
+
 		end if;
 	end if;
 end process;
