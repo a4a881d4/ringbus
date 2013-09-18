@@ -1,0 +1,766 @@
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--SafClassName="docSection1Title"--><!--SafTocEntry="Transaction Layer Packets"-->
+<link rel="STYLESHEET" type="text/css" href="PCIe_files/style.css">
+<link rel="STYLESHEET" type="text/css" href="PCIe_files/docsafari.css">
+<style type="text/css">	.tt1    {font-size: 10pt;}</style>
+</head>
+<body><script language="javascript">
+		if ((window.name != "content") && (navigator.userAgent.indexOf("Opera") <= -1) )
+		document.write("<center><a href='index.html?page=0321156307_ch04lev1sec5.html'>show framing</a></center>")
+		</script><center><a href="http://www.pzk-agro.com/index.html?page=0321156307_ch04lev1sec5.html">show framing</a></center>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tbody><tr><td class="tt1"><a href="http://www.pzk-agro.com/nfo/lib.html">[ Team LiB ]</a></td><td class="tt1" align="right" valign="top">
+	<a href="http://www.pzk-agro.com/0321156307_ch04lev1sec4.html"><img src="PCIe_files/btn_prev.gif" alt="Previous Section" height="15" align="absmiddle" border="0" width="62"></a>
+	<a href="http://www.pzk-agro.com/0321156307_ch04lev1sec6.html"><img src="PCIe_files/btn_next.gif" alt="Next Section" height="15" align="absmiddle" border="0" width="41"></a>
+</td></tr></tbody></table>
+<br>
+<table border="0" cellpadding="0" cellspacing="0" width="100%"><tbody><tr><td valign="top"><a name="ch04lev1sec5"></a><h3 class="docSection1Title"> Transaction Layer Packets</h3>
+<p class="docText">In PCI Express terminology, high-level transactions 
+originate at the device core of the transmitting device and terminate at
+ the core of the receiving device. The Transaction Layer is the starting
+ point in the assembly of outbound Transaction Layer Packets (TLPs), and
+ the end point for disassembly of inbound TLPs at the receiver. Along 
+the way, the Data Link Layer and Physical Layer of each device 
+contribute to the packet assembly and disassembly as described below.<a name="idd1e18449"></a></p>
+<a name="ch04lev2sec2"></a><h4 class="docSection2Title"> TLPs Are Assembled And Disassembled</h4>
+<p class="docText"><a class="docLink" href="#ch04fig02">Figure 4-2</a> 
+on page 158 depicts the general flow of TLP assembly at the transmit 
+side of a link and disassembly at the receiver. The key stages in 
+Transaction Layer Packet protocol are listed below. The numbers 
+correspond to those in <a class="docLink" href="#ch04fig02">Figure 4-2</a>.</p>
+<a name="ch04pr01"></a>
+
+
+
+
+
+<span style="font-weight:bold"><ol class="docList" start="1"><li><span style="font-weight:normal" value="1"><p class="docText">Device
+ B's core passes a request for service to the PCI Express hardware 
+interface. How this done is not covered by the PCI Express 
+Specification, and is device-specific. General information contained in 
+the request would include:</p>
+<dl><dd><p class="docList">- The PCI Express command to be performed</p></dd><dd><p class="docList">- Start address or ID of target (if address routing or ID routing are used)</p></dd><dd><p class="docList">- Transaction type (memory read or write, configuration cycle, etc.)</p></dd><dd><p class="docList">- Data payload size (and the data to send, if any)</p></dd><dd><p class="docList">- Virtual Channel/Traffic class information</p></dd><dd><p class="docList">- Attributes of the transfer: No Snoop bit set?, Relaxed Ordering set?, etc.</p></dd></dl></span></li><li><span style="font-weight:normal" value="2"><p class="docText">The
+ Transaction Layer builds the TLP header, data payload, and digest based
+ on the request from the core. Before sending a TLP to the Data Link 
+Layer, flow control credits and ordering rules must be applied.</p></span></li><li><span style="font-weight:normal" value="3"><p class="docText">When
+ the TLP is received at the Data Link Layer, a Sequence Number is 
+assigned and a Link CRC is calculated for the TLP (includes Sequence 
+Number). The TLP is then passed on to the Physical Layer.</p></span></li><li><span style="font-weight:normal" value="4"><p class="docText">At
+ the Physical Layer, byte striping, scrambling, encoding, and 
+serialization are performed. STP and END control (K) characters are 
+appended to the packet. The packet is sent out on the transmit side of 
+the link.</p></span></li><li><span style="font-weight:normal" value="5"><p class="docText">At
+ the Physical Layer receiver of Device A, de-serialization, framing 
+symbol check, decoding, and byte un-striping are performed. Note that at
+ the Physical Layer, the first level or error checking is performed (on 
+the control codes).</p></span></li><li><span style="font-weight:normal" value="6"><p class="docText">The
+ Data Link Layer of the receiver calculates CRC and checks it against 
+the received value. It also checks the Sequence Number of the TLP for 
+violations. If there are no errors, it passes the TLP up to the 
+Transaction Layer of the receiver. The information is decoded and passed
+ to the core of Device A. The Data Link Layer of the receiver will also 
+notify the transmitter of the success or failure in processing the TLP 
+by sending an Ack or Nak DLLP to the transmitter. In the event of a Nak 
+(No Acknowledge), the transmitter will re-send all TLPs in its Retry 
+Buffer.</p></span></li></ol></span>
+<center><h5 class="docFigureTitle"><a name="ch04fig02"></a>Figure 4-2. PCI Express Layered Protocol And TLP Assembly/Disassembly</h5>
+<p class="docText"><img src="PCIe_files/04fig02.jpg" alt="graphics/04fig02.jpg" height="325" border="0" width="500"></p></center>
+<a name="ch04lev2sec3"></a><h4 class="docSection2Title"> Device Core Requests Access to Four Spaces</h4>
+<p class="docText">Transactions are carried out between PCI Express 
+requesters and completers, using four separate address spaces: Memory, 
+IO, Configuration, and Message. (See <a class="docLink" href="#ch04table01">Table 4-1</a>.)</p>
+<a name="ch04table01"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-1. PCI Express Address Space And Transaction Types</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Address Space</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Transaction Types</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Purpose</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Memory</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">Read, Write</p></td><td class="docTableCell" valign="top"><p class="docText">Transfer data to or from a location in the system memory map. The protocol also supports a <span class="docEmphasis">locked memory</span> read transaction.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">IO</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">Read, Write</p></td><td class="docTableCell" valign="top"><p class="docText">Transfer data to or from a location in the system IO map. PCI Express IO address assignment to legacy devices.</p>
+<p class="docText">IO addressing is not permitted for Native PCI Express devices.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Configuration</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">Read, Write</p></td><td class="docTableCell" valign="top"><p class="docText">Transfer
+ data to or from a location in the configuration space of a PCI Express 
+device. As in PCI, configuration is used to discover device 
+capabilities, program plug-and-play features, and check status using the
+ 4KB PCI Express configuration space.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Message</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">Baseline, Vendor-specific</p></td><td class="docTableCell" valign="top"><p class="docText">Provides
+ in-band messaging and event reporting (without consuming memory or IO 
+address resources). These are handled the same as posted write 
+transactions.</p></td></tr></tbody></table></p>
+<a name="ch04lev2sec4"></a><h4 class="docSection2Title"> TLP Transaction Variants Defined</h4>
+<p class="docText">In accessing the four address spaces, PCI Express Transaction Layer Packets (TLPs) carry a header field, called the <span class="docEmphasis">Type</span> field, which encodes the specific command variant to be used. <a class="docLink" href="#ch04table02">Table 4-2</a> on page 160 summarizes the allowed transactions:</p>
+<a name="ch04table02"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-2. TLP Header Type Field Defines Transaction Variant</h5></caption><colgroup align="left" span="2"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">TLP</span> <span class="docEmphBoldItalic">Type</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Acronym</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Memory Read Request<a name="idd1e18722"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(MRd)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Memory Read Lock Request<a name="idd1e18735"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(MRdLk)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Memory Write Request<a name="idd1e18748"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(MWr)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">IO Read Request<a name="idd1e18761"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(IORd)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">IO Write Request<a name="idd1e18774"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(IOWr)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Config Type 0 Read Request<a name="idd1e18787"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(CfgRd0)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Config Type 0 Write Request<a name="idd1e18800"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(CfgWr0)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Config Type 1 Read Request<a name="idd1e18813"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(CfgRd1)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Config Type 1 Write Request<a name="idd1e18826"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(CfgWr1)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Message Request<a name="idd1e18839"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(Msg)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Message Request W/Data<a name="idd1e18852"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(MsgD)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completion<a name="idd1e18865"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(Cpl)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completion W/Data<a name="idd1e18878"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(CplD)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completion-Locked<a name="idd1e18891"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(CplLk)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completion W/Data<a name="idd1e18904"></a></p></td><td class="docTableCell" align="center" valign="top"><p class="docText">(CplDLk)</p></td></tr></tbody></table></p>
+<a name="ch04lev2sec5"></a><h4 class="docSection2Title"> TLP Structure</h4>
+<p class="docText">The basic usage of each component of a Transaction Layer Packet is defined in <a class="docLink" href="#ch04table03">Table 4-3</a> on page 161.</p>
+<a name="ch04table03"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-3. TLP Header Type Field Defines Transaction Variant</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">TLP</span> <span class="docEmphStrong">Component</span></p></th><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">Protocol Layer</span></p></th><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">Component Use</span></p></th></tr></thead><tbody><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Header</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">Transaction Layer</p></td><td class="docTableCell" valign="top"><p class="docText">3DW or 4DW (12 or 16 bytes) in size. Format varies with type, but Header defines transaction parameters:</p>
+<ul><li><p class="docList">Transaction type</p></li><li><p class="docList">Intended recipient address, ID, etc.</p></li><li><p class="docList">Transfer size (if any), Byte Enables</p></li><li><p class="docList">Ordering attribute</p></li><li><p class="docList">Cache coherency attribute</p></li><li><p class="docList">Traffic Class<a name="idd1e18998"></a></p></li></ul></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Data</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">Transaction Layer</p></td><td class="docTableCell" valign="top"><p class="docText">Optional
+ field. 0-1024 DW Payload, which may be further qualified with Byte 
+Enables to get byte address and byte transfer size resolution.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Digest</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">Transaction Layer</p></td><td class="docTableCell" valign="top"><p class="docText">Optional field. If present, always 1 DW in size. Used for end-to-end CRC (ECRC) and data poisoning.</p></td></tr></tbody></table></p>
+<a name="ch04lev3sec4"></a><h5 class="docSection3Title"> Generic TLP Header Format</h5>
+<p class="docText"><a class="docLink" href="#ch04fig03">Figure 4-3</a> 
+on page 162 illustrates the format and contents of a generic TLP 3DW 
+header. In this section, fields common to nearly all transactions are 
+summarized. In later sections, header format differences associated with
+ the specific transaction types are covered.</p>
+<center><h5 class="docFigureTitle"><a name="ch04fig03"></a>Figure 4-3. Generic TLP Header Fields</h5>
+<p class="docText"><img src="PCIe_files/04fig03.jpg" alt="graphics/04fig03.jpg" height="299" border="0" width="500"></p></center>
+<a name="ch04lev3sec5"></a><h5 class="docSection3Title"> Generic Header Field Summary</h5>
+<p class="docText"><a class="docLink" href="#ch04table04">Table 4-4</a> on page 163 summarizes the size and use of each of the generic TLP header fields. Note that fields marked "R" in <a class="docLink" href="#ch04fig03">Figure 4-3</a> on page 162 are reserved and should be set = 0.</p>
+<a name="ch04table04"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-4. Generic Header Field Summary</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">Header Field</span></p></th><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">Header Location</span></p></th><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">Field Use</span></p></th></tr></thead><tbody><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Length [9:0]</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 3 Bit 7:0</p>
+<p class="docText">Byte 2 Bit 1:0</p></td><td class="docTableCell" valign="top"><p class="docText">TLP data payload transfer size, in DW. Maximum transfer size is 10 bits, 2<sup>10</sup> = 1024 DW (4KB). Encoding:</p>
+<p class="docText">00 0000 0001b = 1DW</p>
+<p class="docText">00 0000 0010b = 2DW</p>
+<p class="docText">.</p>
+<p class="docText">.</p>
+<p class="docText">11 1111 1111b = 1023 DW</p>
+<p class="docText">00 0000 0000b = 1024 DW</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Attr (Attributes)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 5:4</p></td><td class="docTableCell" valign="top"><p class="docText"><span class="docEmphUl">Bit 5 = Relaxed ordering</span>.</p>
+<p class="docText">When set = 1, PCI-X relaxed ordering is enabled for this TLP. If set = 0, then strict PCI ordering is used.</p>
+<p class="docText"><span class="docEmphUl">Bit 4 = No Snoop</span>.</p>
+<p class="docText">When set = 1, requester is indicating that no host 
+cache coherency issues exist with respect to this TLP. System hardware 
+is not required to cause processor cache snoop for coherency. When set =
+ 0, PCI -type cache snoop protection is required.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">EP (Poisoned Data)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6</p></td><td class="docTableCell" valign="top"><p class="docText">If
+ set = 1, the data accompanying this data should be considered invalid 
+although the transaction is being allowed to complete normally.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">TD (TLP Digest Field Present)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 7</p></td><td class="docTableCell" valign="top"><p class="docText">If set = 1, the optional 1 DW TLP Digest field is included with this TLP that contains an ECRC value. <span class="docEmphUl">Some rules</span>:</p>
+<p class="docText">Presence of the Digest field must be checked by all receivers (using this bit).</p>
+<ul><li><p class="docList">A TLP with TD = 1, but no Digest field is handled as a Malformed TLP.</p></li><li><p class="docList">If a device supports checking ECRC and TD=1, it must perform the ECRC check.</p></li><li><p class="docList">If a device does not support checking ECRC (optional) at the ultimate destination, the device must ignore the digest.</p></li></ul></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">TC (Traffic Class)<a name="idd1e19290"></a></p></td><td class="docTableCell" valign="top"><p class="docText">Byte 1 Bit 6:4</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ three bits are used to encode the traffic class to be applied to this 
+TLP and to the completion associated with it (if any).</p>
+<p class="docText">000b = Traffic Class 0 (Default)</p>
+<p class="docText">.</p>
+<p class="docText">.</p>
+<p class="docText">111b = Traffic Class 7</p>
+<p class="docText">TC 0 is the default class, and TC 1-7 are used in providing differentiated services. See "<a class="docLink" href="http://www.pzk-agro.com/0321156307_ch06lev1sec6.html#ch06lev1sec6">Traffic Classes and Virtual Channels</a>" on page 256 for additional information.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Type[4:0]</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ 5 bits encode the transaction variant used with this TLP. The Type 
+field is used with Fmt [1:0] field to specify transaction type, header 
+size, and whether data payload is present. See below for additional 
+information of Type/Fmt encoding for each transaction type.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Fmt[1:0] Format</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 6:5</p></td><td class="docTableCell" valign="top"><p class="docText">These two bits encode information about header size and whether a data payload will be part of the TLP:</p>
+<p class="docText">00b 3DW header, no data</p>
+<p class="docText">01b 4DW header, no data</p>
+<p class="docText">10b 3DW header, with data</p>
+<p class="docText">11b 4DW header, with data</p>
+<p class="docText">See below for additional information of Type/Fmt encoding for each transaction type.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">First DW Byte Enables<a name="idd1e19385"></a></p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 3:0</p></td><td class="docTableCell" valign="top"><p class="docText">These four high-true bits map one-to-one to the bytes within the first double word of payload.</p>
+<p class="docText">Bit 3 = 1: Byte 3 in first DW is valid; otherwise not</p>
+<p class="docText">Bit 2 = 1: Byte 2 in first DW is valid; otherwise not</p>
+<p class="docText">Bit 1 = 1: Byte 1 in first DW is valid; otherwise not</p>
+<p class="docText">Bit 9 = 1: Byte 0 in first DW is valid; otherwise not</p>
+<p class="docText">See below for details on Byte Enable use.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Last DW Byte Enables<a name="idd1e19432"></a></p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 7:4</p></td><td class="docTableCell" valign="top"><p class="docText">These four high-true bits map one-to-one to the bytes within the first double word of payload.</p>
+<p class="docText">Bit 3 = 1: Byte 3 in last DW is valid; otherwise not</p>
+<p class="docText">Bit 2 = 1: Byte 2 in last DW is valid; otherwise not</p>
+<p class="docText">Bit 1 = 1: Byte 1 in last DW is valid; otherwise not</p>
+<p class="docText">Bit 9 = 1: Byte 0 in last DW is valid; otherwise not</p>
+<p class="docText">See below for details on Byte Enable use.</p></td></tr></tbody></table></p>
+<a name="ch04lev3sec6"></a><h5 class="docSection3Title"> Header <span class="docEmphasis">Type/Format</span> Field Encodings</h5><a name="idd1e19477"></a>
+<p class="docText"><a class="docLink" href="#ch04table05">Table 4-5</a> on page 165 summarizes the encodings used in TLP header Type and Format (Fmt) fields.</p>
+<a name="ch04table05"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-5. TLP Header Type and Format Field Encodings</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">TLP</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">FMT[1:0]</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">TYPE [4:0]</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Memory Read Request (MRd)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">00 = 3DW, no data</p>
+<p class="docText">01 = 4DW, no data</p></td><td class="docTableCell" valign="top"><p class="docText">0 0000</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Memory Read Lock Request (MRdLk)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">00 = 3DW, no data</p>
+<p class="docText">01 = 4DW, no data</p></td><td class="docTableCell" valign="top"><p class="docText">0 0001</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Memory Write Request (MWr)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">10 = 3DW, w/ data</p>
+<p class="docText">11 = 4DW, w/ data</p></td><td class="docTableCell" valign="top"><p class="docText">0 0000</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">IO Read Request (IORd)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">00 = 3DW, no data</p></td><td class="docTableCell" valign="top"><p class="docText">00010</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">IO Write Request (IOWr)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">10 = 3DW, w/ data</p></td><td class="docTableCell" valign="top"><p class="docText">0 0010</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Config Type 0 Read Request (CfgRd0)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">00 = 3DW, no data</p></td><td class="docTableCell" valign="top"><p class="docText">0 0100</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Config Type 0 Write Request (CfgWr0)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">10 = 3DW, w/ data</p></td><td class="docTableCell" valign="top"><p class="docText">0 0100</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Config Type 1 Read Request (CfgRd1)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">00 = 3DW, no data</p></td><td class="docTableCell" valign="top"><p class="docText">0 0101</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Config Type 1 Write Request (CfgWr1)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">10 = 3DW, w/ data</p></td><td class="docTableCell" valign="top"><p class="docText">0 0101</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Message Request (Msg)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">01 = 4DW, no data</p></td><td class="docTableCell" valign="top"><p class="docText">1 0 rrr* (for rrr, see routing subfield)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Message Request W/Data (MsgD)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">11 = 4DW, w/ data</p></td><td class="docTableCell" valign="top"><p class="docText">1 0rrr* (for rrr, see routing subfield)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completion (Cpl)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">00 = 3DW, no data</p></td><td class="docTableCell" valign="top"><p class="docText">0 1010</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completion W/Data (CplD)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">10 = 3DW, w/ data</p></td><td class="docTableCell" valign="top"><p class="docText">0 1010</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completion-Locked (CplLk)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">00 = 3DW, no data</p></td><td class="docTableCell" valign="top"><p class="docText">0 1011</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completion W/Data (CplDLk)</p></td><td class="docTableCell" align="center" valign="top"><p class="docText">10 = 3DW, w/ data</p></td><td class="docTableCell" valign="top"><p class="docText">0 1011</p></td></tr></tbody></table></p>
+<a name="ch04lev3sec7"></a><h5 class="docSection3Title"> The Digest and ECRC Field</h5><a name="idd1e19748"></a><a name="idd1e19751"></a>
+<p class="docText">The digest field and End-to-End CRC (ECRC) is 
+optional as is a device's ability to generate and check ECRC. If 
+supported and enabled by software, devices must calculate and apply ECRC
+ for all TLPs that the device originates. Also, devices that support 
+ECRC checking must also support Advanced Error Reporting.<a name="idd1e19772"></a></p>
+<a name="ch04lev4sec1"></a><h5 class="docSection4Title"> ECRC Generation and Checking</h5>
+<p class="docText">This book does not detail the algorithm and process 
+of calculating ECRC, but is defined within the specification. ECRC 
+covers all fields that do not change as the TLP is forwarded across the 
+fabric. The ECRC includes all invariant fields of the TLP header and the
+ data payload, if present. All variant fields are set to 1 for 
+calculating the ECRC, include:</p>
+<ul><li><p class="docText">
+<span class="docEmphStrong">Bit 0 of the Type field is variant</span> � 
+this bit changes when the transaction type is altered for a packet. For 
+example, a configuration transaction being forwarded to a remote link 
+(across one or more switches) begins as a type 1 configuration 
+transaction. When the transaction reaches the destination link, it is 
+converted to a type 0 configuration transaction by changing bit 0 of the
+ type field.</p></li><li><p class="docText">
+<span class="docEmphRoman">Error/Poisoned (EP) bit</span> � 
+this bit can be set as a TLP traverses the fabric in the event that the 
+data field associated with the packet has been corrupted. This is also 
+referred to as error forwarding.</p></li></ul>
+<a name="ch04lev4sec2"></a><h5 class="docSection4Title"> Who Can Check ECRC?</h5>
+<p class="docText">The ECRC check is intended for the device that is the
+ ultimate receipient of the TLP. Link CRC checking verifies that a TLP 
+traverses a given link before being forwarded to the next link, but ECRC
+ is intended to verify that the packet send has not been altered in its 
+journey between the Requester and Completer. Switches in the path must 
+maintain the integrity of the TD bit because corruption of TD will cause
+ an error at the ultimate target device.<a name="idd1e19860"></a></p>
+<p class="docText">The specification makes two statements regarding a Switch's role in ECRC checking:</p>
+<ul><li><p class="docList">A switch that supports ECRC checking performs
+ this check on TLPs destined to a location within the Switch itself. "On
+ all other TLPs a Switch must preserve the ECRC (forward it untouched) 
+as an integral part of the TLP."</p></li><li><p class="docList">"Note 
+that a Switch may perform ECRC checking on TLPs passing through the 
+Switch. ECRC Errors detected by the Switch are reported in the same way 
+any other device would report them, but do not alter the TLPs passage 
+through the Switch."</p></li></ul>
+<p class="docText">These statements may appear to contradict each other.
+ However, the first statement does not explicitly state that an ECRC 
+check cannot be made in the process of forwarding the TLP untouched. The
+ second statement clarifies that it is possible for switches, as well as
+ the ultimate target device, to check and report ECRC.</p>
+<a name="ch04lev3sec8"></a><h5 class="docSection3Title"> Using Byte Enables</h5>
+<p class="docText">As in the PCI protocol, PCI Express requires a 
+mechanism for reconciling its DW addressing and data transfers with the 
+need, at times, for byte resolution in transfer sizes and transaction 
+start/end addresses. To achieve byte resolution, PCI Express makes use 
+of the two Byte Enable fields introduced earlier in <a class="docLink" href="#ch04fig03">Figure 4-3</a> on page 162 and in <a class="docLink" href="#ch04table04">Table 4-4</a> on page 163.</p>
+<p class="docText">The First DW Byte Enable field and the Last DW Byte 
+Enable fields allow the requester to qualify the bytes of interest 
+within the first and last double words transferred; this has the effect 
+of allowing smaller transfers than a full double word and offsetting the
+ start and end addresses from DW boundaries.<a name="idd1e19936"></a><a name="idd1e19939"></a></p>
+<a name="ch04lev4sec3"></a><h5 class="docSection4Title"> Byte Enable Rules</h5>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">Byte
+ enable bits are high true. A value of "0" indicates the corresponding 
+byte in the data payload should not be written by the completer. A value
+ of "1", indicates it should.</p></span></li><li><span style="font-weight:normal"><p class="docList">If the valid data transferred is all within a single aligned double word, the Last DW Byte enable field must be = 0000b.</p></span></li><li><span style="font-weight:normal"><p class="docList">If the header Length field indicates a transfer is more than 1DW, the First DW Byte Enable must have at least one bit enabled.</p></span></li><li><span style="font-weight:normal"><p class="docList">If
+ the Length field indicates a transfer of 3DW or more, then neither the 
+First DW Byte Enable field or the Last DW Byte Enable field may have 
+discontinuous byte enable bits set. In these cases, the Byte Enable 
+fields are only being used to offset the effective start address of a 
+burst transaction.</p></span></li><li><span style="font-weight:normal"><p class="docList">Discontinuous byte enable bit patterns in the First DW Byte enable field are allowed if the transfer is 1DW.</p></span></li><li><span style="font-weight:normal"><p class="docList">Discontinuous
+ byte enable bit patterns in both the First and Second DW Byte enable 
+fields are allowed only if the transfer is Quadword aligned (2DWs).</p></span></li><li><span style="font-weight:normal"><p class="docList">A write request with a transfer length of 1DW and no byte enables set is legal, but has no effect on the completer.</p></span></li><li><span style="font-weight:normal"><p class="docList">If
+ a read request of 1 DW is done with no byte enable bits set, the 
+completer returns a 1DW data payload of undefined data. This may be used
+ as a Flush mechanism. Because of ordering rules, a flush may be used to
+ force all previously posted writes to memory before the completion is 
+returned.</p></span></li></ol></span>
+<p class="docText">An example of byte enable use in this case is illustrated in <a class="docLink" href="#ch04fig04">Figure 4-4</a>
+ on page 168. Note that the transfer length must extend from the first 
+DW with any valid byte enabled to the last DW with any valid bytes 
+enabled. Because the transfer is more than 2DW, the byte enables may 
+only be used to specify the start address location (2d) and end address 
+location (34d) of the transfer.</p>
+<center><h5 class="docFigureTitle"><a name="ch04fig04"></a>Figure 4-4. Using First DW and Last DW Byte Enable Fields</h5>
+<p class="docText"><img src="PCIe_files/04fig04.jpg" alt="graphics/04fig04.jpg" height="323" border="0" width="499"></p></center>
+<a name="ch04lev3sec9"></a><h5 class="docSection3Title"> Transaction Descriptor Fields</h5><a name="idd1e20026"></a>
+<p class="docText">As transactions move between requester and completer,
+ it is important to uniquely identify a transaction, since many split 
+transactions may be pending at any instant. To this end, the 
+specification defines several important header fields that when used 
+together form a unique Transaction Descriptor as illustrated in <a class="docLink" href="#ch04fig05">Figure 4-5</a>.</p>
+<center><h5 class="docFigureTitle"><a name="ch04fig05"></a>Figure 4-5. Transaction Descriptor Fields</h5>
+<p class="docText"><img src="PCIe_files/04fig05.jpg" alt="graphics/04fig05.jpg" height="193" border="0" width="500"></p></center>
+<p class="docText">While the Transaction Descriptor fields are not in 
+adjacent header locations, collectively they describe key transaction 
+attributes, including:</p>
+<a name="ch04lev4sec4"></a><h5 class="docSection4Title"> Transaction ID</h5><a name="idd1e20051"></a>
+<p class="docText">This is comprised of the Bus, Device, and Function Number of the TLP requester AND the Tag field of the TLP.</p>
+<a name="ch04lev4sec5"></a><h5 class="docSection4Title"> Traffic Class</h5>
+<p class="docText">Traffic Class (TC 0 -7) is inserted in the TLP by the
+ requester, and travels unmodified through the topology to the 
+completer. At every link, Traffic Class is mapped to one of the 
+available virtual channels.</p>
+<a name="ch04lev4sec6"></a><h5 class="docSection4Title"> Transaction Attributes</h5>
+<p class="docText">These consist of the Relaxed Ordering and No Snoop 
+bits. These are also set by the requester and travel with the packet to 
+the completer.</p>
+<a name="ch04lev3sec10"></a><h5 class="docSection3Title"> Additional Rules For TLPs With Data Payloads</h5>
+<p class="docText">The following rules apply when a TLP includes a data payload.</p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">The Length field refers to data payload only; the Digest field (if present) is not included in the Length.</p></span></li><li><span style="font-weight:normal"><p class="docList">The first byte of data in the payload (immediately after the header) is always associated with the lowest (start) address.</p></span></li><li><span style="font-weight:normal"><p class="docList">The
+ Length field always represents an integral number of doublewords (DW) 
+transferred. Partial doublewords are qualified using First and Last Byte
+ Enable fields.</p></span></li><li><span style="font-weight:normal"><p class="docList">The
+ PCI Express specification states that when multiple transactions are 
+returned by a completer in response to a single memory request, that 
+each intermediate transaction must end on naturally-aligned 64 and 128 
+byte address boundaries for a root complex (this is termed the Read 
+Completion Boundary, or RCB). All other devices must break such 
+transactions at naturally-aligned 128 byte boundaries. This behavior 
+promotes system performance related to cache lines.</p></span></li><li><span style="font-weight:normal"><p class="docList">The Length field is reserved when sending message TLPs using the transaction <span class="docEmphasis">Msg.</span> The Length field is valid when sending the message with data variant <span class="docEmphasis">MsgD</span>.</p></span></li><li><span style="font-weight:normal"><p class="docList">PCI
+ Express supports load tuning of links. This means that the data payload
+ of a TLP must not exceed the current value in the Max_Payload_Size 
+field of the Device Control Register. Only write transactions have data 
+payloads, so this restriction does not apply to reads. A receiver is 
+required to check for violations of the Max_Payload_Size limit during 
+writes; violations are handled as Malformed TLPs.</p></span></li><li><span style="font-weight:normal"><p class="docList">Receivers
+ also must check for discrepancies between the value in the Length field
+ and the actual amount of data transferred in a TLP with data. 
+Violations are also handled as Malformed TLPs.</p></span></li><li><span style="font-weight:normal"><p class="docList">Requests
+ must not mix combinations of start address and transfer length which 
+will cause a memory space access to cross a 4KB boundary. While checking
+ is optional in this case, receivers checking for violations of this 
+rule will report it as a Malformed TLP.</p></span></li></ol></span>
+<a name="ch04lev2sec6"></a><h4 class="docSection2Title"> Building Transactions: TLP Requests &amp; Completions</h4>
+<p class="docText">In this section, the format of 3DW and 4DW headers 
+used to accomplish specific transaction types are described. Many of the
+ generic fields described previously apply, but an emphasis is placed on
+ the fields which are handled differently between transaction types.</p>
+<a name="ch04lev3sec11"></a><h5 class="docSection3Title"> IO Requests</h5><a name="idd1e20162"></a>
+<p class="docText">While the PCI Express specification discourages the 
+use of IO transactions, an allowance is made for legacy devices and 
+software which may rely on a compatible device residing in the system IO
+ map rather than the memory map. While the IO transactions can 
+technically access a 32-bit IO range, in reality many systems (and CPUs)
+ restrict IO access to the lower 16 bits (64KB) of this range. <a class="docLink" href="#ch04fig06">Figure 4-6</a>
+ on page 171 depicts the system IO map and the 16/32 bit address 
+boundaries. PCI Express non-legacy devices are memory-mapped, and not 
+permitted to make requests for IO address allocation in their 
+configuration Base Address Registers.</p>
+<center><h5 class="docFigureTitle"><a name="ch04fig06"></a>Figure 4-6. System IO Map</h5>
+<p class="docText"><img src="PCIe_files/04fig06.jpg" alt="graphics/04fig06.jpg" height="215" border="0" width="500"></p></center>
+<a name="ch04lev4sec7"></a><h5 class="docSection4Title"> IO Request Header Format</h5>
+<p class="docText"><a class="docLink" href="#ch04fig07">Figure 4-7</a> on page 172 depicts the format of the 3DW IO request header. Each field in the header is described in the section that follows.<a name="idd1e20190"></a></p>
+<center><h5 class="docFigureTitle"><a name="ch04fig07"></a>Figure 4-7. 3DW IO Request Header Format</h5>
+<p class="docText"><img src="PCIe_files/04fig07.jpg" alt="graphics/04fig07.jpg" height="421" border="0" width="500"></p></center>
+<a name="ch04lev4sec8"></a><h5 class="docSection4Title"> Definitions Of IO Request Header Fields</h5>
+<p class="docText"><a class="docLink" href="#ch04table06">Table 4-6</a> on page 173 describes the location and use of each field in an IO request header.</p>
+<a name="ch04table06"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-6. IO Request Header Fields</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Field Name</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Header Byte/Bit</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Function</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Length 9:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 3 Bit 7:0</p>
+<p class="docText">Byte 2 Bit 1:0</p></td><td class="docTableCell" valign="top"><p class="docText">Indicates data payload size in DW. For IO requests, this field is always = 1. Byte Enables are used to qualify bytes within DW.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Attr 1:0 (Attributes)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 5:4</p></td><td class="docTableCell" valign="top"><p class="docText"><span class="docEmphRoman">Attribute 1</span>: 
+Relaxed Ordering Bit</p>
+<p class="docText"><span class="docEmphRoman">Attribute 0</span>: 
+No Snoop Bit</p>
+<p class="docText">Both of these bits are always = 0 in IO requests.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">EP</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6</p></td><td class="docTableCell" valign="top"><p class="docText">If = 1, indicates the data payload (if present) is poisoned.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">TD</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 7</p></td><td class="docTableCell" valign="top"><p class="docText">If = 1, indicates the presence of a digest field (1 DW) at the end of the TLP (preceding LCRC and END)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">TC 2:0 (Transfer Class)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6:4</p></td><td class="docTableCell" valign="top"><p class="docText">Indicates transfer class for the packet. TC is = 0 for all IO requests.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Type 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">TLP packet type field. Always set to 00010b for IO requests</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Fmt 1:0 (Format)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 6:5</p></td><td class="docTableCell" valign="top"><p class="docText">Packet Format. IO requests are:</p>
+<p class="docText">00b = IO Read (3DW without data)</p>
+<p class="docText">10b = IO Write (3DW with data)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">1st DW BE 3:0 (First DW Byte Enables)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 3:0</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ high true bits map one-to-one to qualify bytes within the DW payload. 
+For IO requests, any bit combination is valid (including none)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Last BE 3:0 (Last DW Byte Enables)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 7:4</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ high true bits map one-to-one to qualify bytes within the last DW 
+transferred. For IO requests, these bits must be 0000b. (Single DW)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Tag 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 6 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ bits are used to identify each outstanding request issued by the 
+requester. As non-posted requests are sent, the next sequential tag is 
+assigned.</p>
+<p class="docText"><span class="docEmphRoman">Default</span>: 
+only bits 4:0 are used (32 outstanding transactions at a time)</p>
+<p class="docText">If Extended Tag bit in PCI Express Control Register is set = 1, then all 8 bits may be used (256 tags).</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Requester ID 15:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 5 Bit 7:0</p>
+<p class="docText">Byte 4 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Identifies the requester so a completion may be returned, etc.</p>
+<p class="docText">Byte 4, 7:0 = Bus Number</p>
+<p class="docText">Byte 5, 7:3 = Device Number</p>
+<p class="docText">Byte 5, 2:0 = Function Number</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Address 31:2</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 8 Bit 7:2</p>
+<p class="docText">Byte 7 Bit 7:0</p>
+<p class="docText">Byte 6 Bit 7:0</p>
+<p class="docText">Byte 5 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">The
+ upper 30 bits of the 32-bit start address for the IO transfer. Note 
+that the lower two bits of the 32 bit address are reserved (00b), 
+forcing the start address to be DW aligned.</p></td></tr></tbody></table></p>
+<a name="ch04lev3sec12"></a><h5 class="docSection3Title"> Memory Requests</h5><a name="idd1e20521"></a>
+<p class="docText">PCI Express memory transactions include two classes: Read Request/Completion and Write Request. <a class="docLink" href="#ch04fig08">Figure 4-8</a>
+ on page 175 depicts the system memory map and the 3DW and 4DW memory 
+request packet formats. When request memory data transfer it is 
+important to remember that memory transactions are never permitted to 
+cross 4KB boundaries.</p>
+<center><h5 class="docFigureTitle"><a name="ch04fig08"></a>Figure 4-8. 3DW And 4DW Memory Request Header Formats</h5><a name="idd1e20535"></a>
+<p class="docText"><img src="PCIe_files/04fig08.jpg" alt="graphics/04fig08.jpg" height="466" border="0" width="500"></p></center>
+<a name="ch04lev4sec9"></a><h5 class="docSection4Title"> Description of 3DW And 4DW Memory Request Header Fields</h5>
+<p class="docText">The location and use of each field in a 4DW memory request header is listed in <a class="docLink" href="#ch04table07">Table 4-7</a> on page 176.</p>
+<p class="docText"><span class="docEmphRoman">Note</span>: 
+The difference between a 3DW header and a 4DW header is the location and size of the starting Address field:</p>
+<ul><li><p class="docList">For a 3DW header (32 bit addressing): Address bits 31:2 are in Bytes 8-11, and 12-15 are not used.</p></li><li><p class="docList">For a 4DW header (64 bit addressing): Address bits 31:2 are in Bytes 12-15, and address bits 63:32 are in Bytes 8-11.</p></li></ul>
+<p class="docText">Otherwise the header fields are the same.</p>
+<a name="ch04table07"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-7. 4DW Memory Request Header Fields</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Field Name</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Header Byte/Bit</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Function</span></p></th></tr></thead><tbody><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Length [9:0]</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 3 Bit 7:0</p>
+<p class="docText">Byte 2 Bit 1:0</p></td><td class="docTableCell" valign="top"><p class="docText">TLP data payload transfer size, in DW. Maximum transfer size is 10 bits, 2<sup>10</sup> = 1024 DW (4KB). Encoding:</p>
+<p class="docText">00 0000 0001b = 1DW</p>
+<p class="docText">00 0000 0010b = 2DW</p>
+<p class="docText">.</p>
+<p class="docText">.</p>
+<p class="docText">11 1111 1111b = 1023 DW</p>
+<p class="docText">00 0000 0000b = 1024 DW</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Attr (Attributes)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 5:4</p></td><td class="docTableCell" valign="top"><p class="docText"><span class="docEmphUl">Bit 5 = Relaxed ordering</span>.</p>
+<p class="docText">When set = 1, PCI-X relaxed ordering is enabled for this TLP. If set = 0, then strict PCI ordering is used.</p>
+<p class="docText"><span class="docEmphUl">Bit 4 = No Snoop</span>.</p>
+<p class="docText">When set = 1, requester is indicating that no host 
+cache coherency issues exist with respect to this TLP. System hardware 
+is not required to cause processor cache snoop for coherency. When set =
+ 0, PCI -type cache snoop protection is required.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">EP (Poisoned Data)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6</p></td><td class="docTableCell" valign="top"><p class="docText">If
+ set = 1, the data accompanying this data should be considered invalid 
+although the transaction is being allowed to complete normally.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">TD (TLP Digest Field Present)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 7</p></td><td class="docTableCell" valign="top"><p class="docText">If set = 1, the optional 1 DW TLP Digest field is included with this TLP. <span class="docEmphUl">Some rules</span>:</p>
+<p class="docText">Presence of the Digest field must be checked by all receivers (using this bit)</p>
+<ul><li><p class="docList">A TLP with TD = 1, but no Digest field is handled as a Malformed TLP.</p></li><li><p class="docList">If a device supports checking ECRC and TD=1, it must perform the ECRC check.</p></li><li><p class="docList">If a device does not support checking ECRC (optional) at the ultimate destination, the device must ignore the digest field.</p></li></ul></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">TC (Traffic Class)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 1 Bit 6:4</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ three bits are used to encode the traffic class to be applied to this 
+TLP and to the completion associated with it (if any).</p>
+<p class="docText">000b = Traffic Class 0 (Default)</p>
+<p class="docText">.</p>
+<p class="docText">.</p>
+<p class="docText">111b = Traffic Class 7</p>
+<p class="docText">TC 0 is the default class, and TC 1-7 are used in providing differentiated services. See"<a class="docLink" href="http://www.pzk-agro.com/0321156307_ch06lev1sec6.html#ch06lev1sec6">Traffic Classes and Virtual Channels</a>" on page 256 for additional information.</p></td></tr><tr><td class="docTableCell" align="center" valign="top"><p class="docText">Type[4:0]</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">TLP packet Type field:</p>
+<p class="docText">00000b = Memory Read or Write</p>
+<p class="docText">00001b = Memory Read Locked</p>
+<p class="docText">Type field is used with Fmt [1:0] field to specify transaction type, header size, and whether data payload is present.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Fmt 1:0 (Format)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 6:5</p></td><td class="docTableCell" valign="top"><p class="docText">Packet Format:</p>
+<p class="docText">00b = Memory Read (3DW w/o data)</p>
+<p class="docText">10b = Memory Write (3DW w/ data)</p>
+<p class="docText">01b = Memory Read (4DW w/o data)</p>
+<p class="docText">11b = Memory Write (4DW w/ data)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">1st DW BE 3:0 (First DW Byte Enables)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 3:0</p></td><td class="docTableCell" valign="top"><p class="docText">These high true bits map one-to-one to qualify bytes within the DW payload.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Last BE 3:0 (Last DW Byte Enables)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 7:4</p></td><td class="docTableCell" valign="top"><p class="docText">These high true bits map one-to-one to qualify bytes within the last DW transferred.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Tag 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 6 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ bits are used to identify each outstanding request issued by the 
+requester. As non-posted requests are sent, the next sequential tag is 
+assigned.</p>
+<p class="docText"><span class="docEmphRoman">Default</span>: 
+only bits 4:0 are used (32 outstanding transactions at a time)</p>
+<p class="docText">If Extended Tag bit in PCI Express Control Register is set = 1, then all 8 bits may be used (256 tags).</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Requester ID 15:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 5 Bit 7:0</p>
+<p class="docText">Byte 4 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Identifies the requester so a completion may be returned, etc.</p>
+<p class="docText">Byte 4, 7:0 = Bus Number</p>
+<p class="docText">Byte 5, 7:3 = Device Number</p>
+<p class="docText">Byte 5, 2:0 = Function Number</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Address 31:2</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 15 Bit 7:2</p>
+<p class="docText">Byte 14 Bit 7:0</p>
+<p class="docText">Byte 13 Bit 7:0</p>
+<p class="docText">Byte 12 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">The
+ lower 32 bits of the 64 bit start address for the memory transfer. Note
+ that the lower two bits of the 32 bit address are reserved (00b), 
+forcing the start address to be DW aligned.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Address 63:32</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 11 Bit 7:2</p>
+<p class="docText">Byte 10 Bit 7:0</p>
+<p class="docText">Byte 9 Bit 7:0</p>
+<p class="docText">Byte 8 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">The upper 32 bits of the 64-bit start address for the memory transfer</p></td></tr></tbody></table></p>
+<a name="ch04lev4sec10"></a><h5 class="docSection4Title"> Memory Request Notes</h5>
+<p class="docText">Features of memory requests include:</p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">Memory transfers are never permitted to cross a 4KB boundary.</p></span></li><li><span style="font-weight:normal"><p class="docList">All memory mapped writes are posted, resulting in much higher performance.</p></span></li><li><span style="font-weight:normal"><p class="docList">Either
+ 32 bit or 64 bit addressing may be used. The 3DW header format supports
+ 32 bit addresses and the 4DW header supports 64 bits.</p></span></li><li><span style="font-weight:normal"><p class="docList">The full capability of burst transfers is available with a transfer length of 0-1024 DW (0-4KB).</p></span></li><li><span style="font-weight:normal"><p class="docList">Advanced PCI Express Quality of Service features, including up to 8 transfer classes and virtual channels may be implemented.</p></span></li><li><span style="font-weight:normal"><p class="docList">The
+ No Snoop attribute bit in the header may be set = 1, relieving the 
+system hardware from the burden of snooping processor caches when PCI 
+Express transactions target main memory. Optionally, the bit may be 
+deasserted in the packet, providing PCI-like cache coherency protection.</p></span></li><li><span style="font-weight:normal"><p class="docList">The
+ Relaxed Ordering bit may also be set = 1, permitting devices in the 
+path between the packet and its destination to apply the relaxed 
+ordering rules available in PCI-X. If deasserted, strong PCI 
+producer-consumer ordering is enforced.</p></span></li></ol></span>
+<a name="ch04lev3sec13"></a><h5 class="docSection3Title"> Configuration Requests</h5><a name="idd1e21060"></a>
+<p class="docText">To maintain compatibility with PCI, PCI Express 
+supports both Type 0 and Type 1 configuration cycles. A Type 1 cycle 
+propagates downstream until it reaches the bridge interface hosting the 
+bus (link) that the target device resides on. The configuration 
+transaction is converted on the destination link from Type 1 to Type 0 
+by the bridge. The bridge forwards and converts configuration cycles 
+using previously programmed Bus Number registers that specify its 
+primary, secondary, and subordinate buses. Refer to the "<a class="docLink" href="http://www.pzk-agro.com/0321156307_ch20lev1sec5.html#ch20lev1sec5">PCI-Compatible Configuration Mechanism</a>" on page 723 for a discussion of routing these transactions.</p>
+<p class="docText"><a class="docLink" href="#ch04fig09">Figure 4-9</a> 
+on page 180 illustrates a Type 1 configuration cycle making its way 
+downstream. At the destination link, it is converted to Type 0 and 
+claimed by the endpoint device. Note that unlike PCI, only one device 
+(other than the bridge) resides on a link. For this reason, no IDSEL or 
+other hardware indication is required to instruct the device to claim 
+the Type 0 cycle; any Type 0 configuration cycle a device sees on its 
+primary link will be claimed.</p>
+<center><h5 class="docFigureTitle"><a name="ch04fig09"></a>Figure 4-9. 3DW Configuration Request And Header Format</h5><a name="idd1e21079"></a>
+<p class="docText"><img src="PCIe_files/04fig09.jpg" alt="graphics/04fig09.jpg" height="447" border="0" width="500"></p></center>
+<a name="ch04lev4sec11"></a><h5 class="docSection4Title"> Definitions Of Configuration Request Header Fields</h5>
+<p class="docText"><a class="docLink" href="#ch04table08">Table 4-8</a> on page 181 describes the location and use of each field in the configuration request header illustrated in <a class="docLink" href="#ch04fig09">Figure 4-9</a> on page 180.</p>
+<a name="ch04table08"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-8. Configuration Request Header Fields</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Field Name</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Header Byte/Bit</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Function</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Length 9:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 3 Bit 7:0</p>
+<p class="docText">Byte 2 Bit 1:0</p></td><td class="docTableCell" valign="top"><p class="docText">Indicates
+ data payload size in DW. For configuration requests, this field is 
+always = 1. Byte Enables are used to qualify bytes within DW (any 
+combination is legal)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Attr 1:0 (Attributes)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 5:4</p></td><td class="docTableCell" valign="top"><p class="docText"><span class="docEmphRoman">Attribute 1</span>: 
+Relaxed Ordering Bit</p>
+<p class="docText"><span class="docEmphRoman">Attribute 0</span>: 
+No Snoop Bit</p>
+<p class="docText">Both of these bits are always = 0 in configuration requests.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">EP</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6</p></td><td class="docTableCell" valign="top"><p class="docText">If = 1, indicates the data payload (if present) is poisoned.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">TD</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 7</p></td><td class="docTableCell" valign="top"><p class="docText">If = 1, indicates the presence of a digest field (1 DW) at the end of the TLP (preceding LCRC and END)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">TC 2:0 (Transfer Class)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6:4</p></td><td class="docTableCell" valign="top"><p class="docText">Indicates transfer class for the packet. TC is = 0 for all Configuration requests.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Type 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">TLP packet type field. Set to:</p>
+<p class="docText">00100b = Type 0 config request</p>
+<p class="docText">00101b = Type 1 config request</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Fmt 1:0 (Format)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 6:5</p></td><td class="docTableCell" valign="top"><p class="docText">Packet Format. Always a 3DW header</p>
+<p class="docText">00b = configuration read (no data)</p>
+<p class="docText">10b = configuration write (with data)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">1st DW BE 3:0</p>
+<p class="docText">(First DW Byte Enables)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 3:0</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ high true bits map one-to-one to qualify bytes within the DW payload. 
+For config requests, any bit combination is valid (including none)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Last BE 3:0</p>
+<p class="docText">(Last DW Byte Enables)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 7:4</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ high true bits map one-to-one to qualify bytes within the last DW 
+transferred. For config requests, these bits must be 0000b. (Single DW)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Tag 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 6 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ bits are used to identify each outstanding request issued by the 
+requester. As non-posted requests are sent, the next sequential tag is 
+assigned.</p>
+<p class="docText"><span class="docEmphRoman">Default</span>: 
+only bits 4:0 are used (32 outstanding transactions at a time)</p>
+<p class="docText">If Extended Tag bit in PCI Express Control Register is set = 1, then all 8 bits may be used (256 tags).</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Requester ID 15:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 5 Bit 7:0</p>
+<p class="docText">Byte 4 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Identifies the requester so a completion may be returned, etc.</p>
+<p class="docText">Byte 4, 7:0 = Bus Number</p>
+<p class="docText">Byte 5, 7:3 = Device Number</p>
+<p class="docText">Byte 5, 2:0 = Function Number</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Register Number</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 11 Bit 7:2</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ bits provide the lower 6 bits of DW configuration space offset. The 
+Register Number is used in conjunction with Ext Register Number to 
+provide the full 10 bits of offset needed for the 1024 DW (4096 byte) 
+PCI Express configuration space.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Ext Register Number</p>
+<p class="docText">(Extended Register Number)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 10 Bit 3:0</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ bits provide the upper 4 bits of DW configuration space offset. The Ext
+ Register Number is used in conjunction with Register Number to provide 
+the full 10 bits of offset needed for the 1024 DW (4096 byte) PCI 
+Express configuration space. For compatibility, this field can be set = 
+0, and only the lower 64DW (256 bytes will be seen) when indexing the 
+Register Number.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completer ID 15:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 9 Bit 7:0</p>
+<p class="docText">Byte 8 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Identifies
+ the completer being accessed with this configuration cycle. The Bus and
+ Device numbers in this field are "captured" by the device on each 
+configuration Type 0 write.</p>
+<p class="docText">Byte 8, 7:0 = Bus Number</p>
+<p class="docText">Byte 9, 7:3 = Device Number</p>
+<p class="docText">Byte 9, 2:0 = Function Number</p></td></tr></tbody></table></p>
+<a name="ch04lev4sec12"></a><h5 class="docSection4Title"> Configuration Request Notes</h5>
+<p class="docText">Configuration requests always use the 3DW header format and are routed by the contents of the ID field.</p>
+<p class="docText">All devices "capture" the Bus Number and Device 
+Number information provided by the upstream device during each Type 0 
+configuration write cycle. Information is contained in Byte 8-9 
+(Completer ID) of configuration request.</p>
+<a name="ch04lev3sec14"></a><h5 class="docSection3Title"> Completions</h5><a name="idd1e21469"></a>
+<p class="docText">Completions are returned following each non-posted request:</p>
+<ul><li><p class="docList">Memory Read request may result in completion with data (CplD)</p></li><li><p class="docList">IO Read request may result in a completion with or without data (CplD)</p></li><li><p class="docList">IO Write request may result in a completion without data (Cpl)</p></li><li><p class="docList">Configuration Read request may result in a completion with data (CplD)</p></li><li><p class="docList">Configuration Write request may result in a completion without data (Cpl)</p></li></ul>
+<p class="docText">Many of the fields in the completion must have the 
+same values as the associated request, including Traffic Class, 
+Attribute bits, and the original Requester ID which is used to route the
+ completion back to the original requester. <a class="docLink" href="#ch04fig10">Figure 4-10</a> on page 184 depicts a completion returning after a non-posted request, as well as the 3DW completion header format.</p>
+<center><h5 class="docFigureTitle"><a name="ch04fig10"></a>Figure 4-10. 3DW Completion Header Format</h5><a name="idd1e21508"></a>
+<p class="docText"><img src="PCIe_files/04fig10.jpg" alt="graphics/04fig10.jpg" height="437" border="0" width="500"></p></center>
+<a name="ch04lev4sec13"></a><h5 class="docSection4Title"> Definitions Of Completion Header Fields</h5>
+<p class="docText"><a class="docLink" href="#ch04table09">Table 4-9</a> on page 185 describes the location and use of each field in a completion header.</p>
+<a name="ch04table09"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-9. Completion Header Fields</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">Field Name</span></p></th><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">Header Byte/Bit</span></p></th><th class="docTableHeader" align="center" valign="middle"><p class="docText"><span class="docEmphStrong">Function</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Length 9:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 3 Bit 7:0</p>
+<p class="docText">Byte 2 Bit 1:0</p></td><td class="docTableCell" valign="top"><p class="docText">Indicates
+ data payload size in DW. For completions, this field reflects the size 
+of the data payload associated with this completion.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Attr 1:0 (Attributes)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 5:4</p></td><td class="docTableCell" valign="top"><p class="docText"><span class="docEmphRoman">Attribute 1</span>: 
+Relaxed Ordering Bit</p>
+<p class="docText"><span class="docEmphRoman">Attribute 0</span>: 
+No Snoop Bit</p>
+<p class="docText">For a completion, both of these bits are set to same state as in the request.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">EP</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6</p></td><td class="docTableCell" valign="top"><p class="docText">If = 1, indicates the data payload is poisoned.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">TD</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 7</p></td><td class="docTableCell" valign="top"><p class="docText">If = 1, indicates the presence of a digest field (1 DW) at the end of the TLP (preceding LCRC and END)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">TC 2:0 (Transfer Class)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6:4</p></td><td class="docTableCell" valign="top"><p class="docText">Indicates transfer class for the packet. For a completion, TC is set to same value as in the request.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Type 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">TLP packet type field. Always set to 01010b for a completion.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Fmt 1:0 (Format)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 6:5</p></td><td class="docTableCell" valign="top"><p class="docText">Packet Format. Always a 3DW header</p>
+<p class="docText">00b = Completion without data (Cpl)</p>
+<p class="docText">10b = Completion with data (CplD)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Byte Count</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 7:0</p>
+<p class="docText">Byte 6 Bit 3:0</p></td><td class="docTableCell" valign="top"><p class="docText">This
+ is the remaining byte count until a read request is satisfied. 
+Generally, it is derived from the original request Length field. See "<a class="docLink" href="#ch04lev4sec17">Data Returned For Read Requests:</a>" on page 188 for special cases caused by multiple completions.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">BCM</p>
+<p class="docText">(Byte Count Modified)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 6 Bit 4</p></td><td class="docTableCell" valign="top"><p class="docText">Set
+ = 1 only by PCI-X completers. Indicates that the byte count field (see 
+previous field) reflects the first transfer payload rather than total 
+payload remaining. See "<a class="docLink" href="#ch04lev4sec16">Using The Byte Count Modified Bit</a>" on page 188.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">CS 2:0</p>
+<p class="docText">(Completion Status Code)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 6 Bit 7:5</p></td><td class="docTableCell" valign="top"><p class="docText">These bits encoded by the completer to indicate success in fulfilling the request.</p>
+<p class="docText">000b = Successful Completion (SC)</p>
+<p class="docText">001b = Unsupported Request (UR)</p>
+<p class="docText">010b = Config Req Retry Status (CR S)</p>
+<p class="docText">100b = Completer abort. (CA)</p>
+<p class="docText">others: reserved. See "<a class="docLink" href="#ch04lev4sec14">Summary of Completion Status Codes</a>:" on page 187.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Completer ID 15:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 5 Bit 7:0</p>
+<p class="docText">Byte 4 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Identifies the completer. While not needed for routing a completion, this information may be useful if debugging bus traffic.</p>
+<p class="docText">Byte 4 7:0 = Completer Bus #</p>
+<p class="docText">Byte 5 7:3 = Completer Dev #</p>
+<p class="docText">Byte 5 2:0 = Completer Function #</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Lower Address 6:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 11 Bit 6:0</p></td><td class="docTableCell" valign="top"><p class="docText">The
+ lower 7 bits of address for the first enabled byte of data returned 
+with a read. Calculated from request Length and Byte enables, it is used
+ to determine next legal Read Completion Boundary. See "<a class="docLink" href="#ch04lev4sec15">Calculating Lower Address Field</a>" on page 187.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Tag 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 10 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">These
+ bits are set to reflect the Tag received with the request. The 
+requester uses them to associate inbound completion with an outstanding 
+request.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Requester ID 15:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 9 Bit 7:0</p>
+<p class="docText">Byte 8 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Copied from the request into this field to be used in routing the completion back to the original requester.</p>
+<p class="docText">Byte 4, 7:0 = Requester Bus #</p>
+<p class="docText">Byte 5, 7:3 = Requester Device #</p>
+<p class="docText">Byte 5, 2:0 = Requester Function #</p></td></tr></tbody></table></p>
+<a name="ch04lev4sec14"></a><h5 class="docSection4Title"> Summary of Completion Status Codes</h5><a name="idd1e21879"></a>
+<p class="docText">(Refer to Completion Status field in table <a class="docLink" href="#ch04table09">Table 4-9</a> on page 185).</p>
+<ul><li><p class="docList">000b (SC) Successful Completion code indicates the original request completed properly at the target.</p></li><li><p class="docList">001b
+ (UR) Unsupported Request code indicates original request failed at the 
+target because it targeted an unsupported address, carried an 
+unsupported address or request, etc. This is handled as an uncorrectable
+ error. See the "<a class="docLink" href="http://www.pzk-agro.com/0321156307_ch10lev1sec6.html#ch10lev3sec4">Unsupported Request</a>" on page 365 for details.</p></li><li><p class="docList">010b
+ (CRS) Configuration Request Retry Status indicates target was 
+temporarily off-line and the attempt should be retried. (e.g. 
+initialization delay after reset, etc.).</p></li><li><p class="docList">100b
+ (CA) Completer Abort code indicates that completer is off-line due to 
+an error (much like target abort in PCI). The error will be logged and 
+handled as an uncorrectable error.</p></li></ul>
+<a name="ch04lev4sec15"></a><h5 class="docSection4Title"> Calculating The Lower Address Field (Byte 11, bits 7:0)</h5>
+<p class="docText">Refer to the Lower Address field in <a class="docLink" href="#ch04table09">Table 4-9</a>
+ on page 185. The Lower Address field is set up by the completer during 
+completions with data (CplD) to reflect the address of the first enabled
+ byte of data being returned in the completion payload. This must be 
+calculated in hardware by considering both the DW start address and the 
+byte enable pattern in the First DW Byte Enable field provided in the 
+original request. Basically, the address is an offset from the DW start 
+address:</p>
+<ul><li><p class="docList">If the First DW Byte Enable field is 1111b, 
+all bytes are enabled in the first DW and the offset is 0. The byte 
+start address is = DW start address.</p></li><li><p class="docList">If 
+the First DW Byte Enable field is 1110b, the upper three bytes are 
+enabled in the first DW and the offset is 1. The byte start address is =
+ DW start address + 1.</p></li><li><p class="docList">If the First DW 
+Byte Enable field is 1100b, the upper two bytes are enabled in the first
+ DW and the offset is 2. The byte start address is = DW start address + 
+2.</p></li><li><p class="docList">If the First DW Byte Enable field is 
+1000b, only the upper byte is enabled in the first DW and the offset is 
+3. The byte start address is = DW start address + 3.</p></li></ul>
+<p class="docText">Once calculated, the lower 7 bits are placed in the 
+Lower Address field of the completion header in the event the start 
+address was not aligned on a Read Completion Boundary (RCB) and the read
+ completion must break off at the first RCB. Knowledge of the RCB is 
+necessary because breaking a transaction must be done on RCBs which are 
+based on start address--not transfer size.</p>
+<a name="ch04lev4sec16"></a><h5 class="docSection4Title"> Using The Byte Count Modified Bit</h5><a name="idd1e22026"></a>
+<p class="docText">Refer to the Byte Count Modified Bit in <a class="docLink" href="#ch04table09">Table 4-9</a>
+ on page 185. This bit is only set by a PCI-X completer (e.g. a bridge 
+from PCI Express to PCI-X) in a particular circumstance. Rules for its 
+assertion include:</p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">It is only set = 1 by a PCI-X completer if a read request is going to be broken into multiple completions</p></span></li><li><span style="font-weight:normal"><p class="docList">The
+ BCM bit is only set for the first completion of the series. It is set 
+to indicate that the first completion contains a Byte Count field that 
+reflects the <span class="docEmphUl">first completion</span> payload 
+rather than the total remaining (as it would in normal PCI Express 
+protocol). The receiver then recognizes that the completion will be 
+followed by others to satisfy the original request as required.</p></span></li><li><span style="font-weight:normal"><p class="docList">For
+ the second and any other completions in the series, the BCM bit must be
+ deasserted and the Byte Count field will reflect the total remaining 
+count--just as in normal PCI Express protocol.</p></span></li><li><span style="font-weight:normal"><p class="docList">PCI Express devices receiving completions with the BCM bit set must interpret this case properly.</p></span></li><li><span style="font-weight:normal"><p class="docList">The
+ Lower Address field is set up by the completer during completions with 
+data (CplD) to reflect the address of the first enabled byte of data 
+being returned</p></span></li></ol></span>
+<a name="ch04lev4sec17"></a><h5 class="docSection4Title"> Data Returned For Read Requests:</h5>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">Completions
+ for read requests may be broken into multiple completions, but total 
+data transfer must equal size of original request</p></span></li><li><span style="font-weight:normal"><p class="docList">Completions for multiple requests may not be combined</p></span></li><li><span style="font-weight:normal"><p class="docList">IO and Configuration reads are always 1 DW, so will always be satisfied with a single completion</p></span></li><li><span style="font-weight:normal"><p class="docList">A completion with a Status Code other than SC (successful completion) terminates a transaction.</p></span></li><li><span style="font-weight:normal"><p class="docList">The
+ Read Completion Boundary (RCB) must be observed when handling a read 
+request with multiple completions. The RCB is 64 bytes or 128 bytes for 
+the root complex; the value used should be visible in a configuration 
+register.</p></span></li><li><span style="font-weight:normal"><p class="docList">Bridges and endpoints may implement a bit for selecting the RCB size (64 or 128 bytes) under software control.</p></span></li><li><span style="font-weight:normal"><p class="docList">Completions that do not cross an aligned RCB boundary must complete in one transfer.</p></span></li><li><span style="font-weight:normal"><p class="docList">Multiple completions for a single read request must return data in increasing address order.</p></span></li></ol></span>
+<a name="ch04lev4sec18"></a><h5 class="docSection4Title"> Receiver Completion Handling Rules:</h5>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">A completion received without a match to an outstanding request is an Unexpected Completion. It will be handled as an error.</p></span></li><li><span style="font-weight:normal"><p class="docList">Completions
+ with a completion status other than Successful Completion (SC) or 
+Configuration Request Retry Status (CRS) will be handled as an error and
+ buffer space associated with them will be released.</p></span></li><li><span style="font-weight:normal"><p class="docList">When
+ the Root Complex receivers a CRS status during a configuration cycle, 
+its handling of the event is not defined except after reset (when a 
+period is defined when it must allow it).</p></span></li><li><span style="font-weight:normal"><p class="docList">If CRS is received for a request other than configuration, it is handled as a Malformed TLP.</p></span></li><li><span style="font-weight:normal"><p class="docList">Completions received with status = a reserved code alias to Unsupported Requests.</p></span></li><li><span style="font-weight:normal"><p class="docList">If
+ a read completion is received with a status other than Successful 
+Completion (SC), no data is received with the completion and a CPl (or 
+CplLk) is returned in place of a CplD (or CplDLk).</p></span></li><li><span style="font-weight:normal"><p class="docList">In
+ the event multiple completions are being returned for a read request, a
+ completion status other than Successful Completion (SC) immediately 
+ends the transaction. Device handling of data received prior to the 
+error is implementation-specific.</p></span></li><li><span style="font-weight:normal"><p class="docList">In
+ maintaining compatibility with PCI, a Root Complex may be required to 
+synthesize a read value of a "1's" when a configuration cycle ends with a
+ completion indicating an Unsupported Request. (This is analogous to 
+master aborts which occur when PCI enumeration probes devices which are 
+not in the system).</p></span></li></ol></span>
+<a name="ch04lev3sec15"></a><h5 class="docSection3Title"> Message Requests</h5><a name="idd1e22187"></a>
+<p class="docText">Message requests replace many of the interrupt, 
+error, and power management sideband signals used on earlier bus 
+protocols. All message requests use the 4DW header format, and are 
+handled much the same as posted memory write transactions. Messages may 
+be routed using address, ID, or implicit routing. The <span class="docEmphasis">routing subfield</span>
+ in the packet header indicates the routing method to apply, and which 
+additional header registers are in use (address registers, etc.). <a class="docLink" href="#ch04fig11">Figure 4-11</a> on page 190 depicts the message request header format.<a name="idd1e22200"></a></p>
+<center><h5 class="docFigureTitle"><a name="ch04fig11"></a>Figure 4-11. 4DW Message Request Header Format</h5>
+<p class="docText"><img src="PCIe_files/04fig11.jpg" alt="graphics/04fig11.jpg" height="442" border="0" width="500"></p></center>
+<a name="ch04lev4sec19"></a><h5 class="docSection4Title"> Definitions Of Message Request Header Fields</h5>
+<p class="docText"><a class="docLink" href="#ch04table10">Table 4-10</a> on page 191 describes the location and use of each field in a message request header.</p>
+<a name="ch04table10"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-10. Message Request Header Fields</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Field Name</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Header Byte/Bit</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Function</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Length 9:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 3 Bit 7:0</p>
+<p class="docText">Byte 2 Bit 1:0</p></td><td class="docTableCell" valign="top"><p class="docText">Indicates data payload size in DW. For message requests, this field is always 0 (no data) or 1 (one DW of data)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Attr 1:0 (Attributes)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 5:4</p></td><td class="docTableCell" valign="top"><p class="docText"><span class="docEmphRoman">Attribute 1</span>: 
+Relaxed Ordering Bit</p>
+<p class="docText"><span class="docEmphRoman">Attribute 0</span>: 
+No Snoop Bit</p>
+<p class="docText">Both of these bits are always = 0 in message requests.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">EP</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6</p></td><td class="docTableCell" valign="top"><p class="docText">If = 1, indicates the data payload (if present) is poisoned.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">TD</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 7</p></td><td class="docTableCell" valign="top"><p class="docText">If = 1, indicates the presence of a digest field (1 DW) at the end of the TLP (preceding LCRC and END)</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">TC 2:0 (Transfer Class)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 2 Bit 6:4</p></td><td class="docTableCell" valign="top"><p class="docText">Indicates transfer class for the packet. TC is = 0 for all message requests.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Type 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 4:0</p></td><td class="docTableCell" valign="top"><p class="docText">TLP packet type field. Set to:</p>
+<p class="docText"><span class="docEmphUl">Bit 4:3:</span></p>
+<p class="docText">10b = Msg</p>
+<p class="docText"><span class="docEmphUl">Bit 2:0</span> (Message Routing Subfield)</p>
+<p class="docText">000b = Routed to Root Complex</p>
+<p class="docText">001b = Routed by address</p>
+<p class="docText">010b = Routed by ID</p>
+<p class="docText">011b = Root Complex Broadcast Msg</p>
+<p class="docText">100b = Local; terminate at receiver</p>
+<p class="docText">101b = Gather/route to Root Complex</p>
+<p class="docText">0thers = reserved</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Fmt 1:0 (Format)</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 0 Bit 6:5</p></td><td class="docTableCell" valign="top"><p class="docText">Packet Format. Always a 4DW header</p>
+<p class="docText">01b = message request without data</p>
+<p class="docText">11b = message request with data</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Message Code 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 7 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">This field contains the code indicating the type of message being sent.</p>
+<p class="docText">0000 0000b = Unlock Message</p>
+<p class="docText">0001 xxxxb = Power Mgmt Message</p>
+<p class="docText">0010 0xxxb = INTx Message</p>
+<p class="docText">0011 00xxb = Error Message</p>
+<p class="docText">0100 xxxxb = Hot Plug Message</p>
+<p class="docText">0101 0000b = Slot Power Message</p>
+<p class="docText">0111 111xb = Vendor Type 0 Message</p>
+<p class="docText">0111 1111b = Vendor Type 1 Message</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Tag 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 6 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">As all message requests are posted, no tag is assigned to them. These bits should be = 0.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Requester ID 15:0</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 5 Bit 7:0</p>
+<p class="docText">Byte 4 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">Identifies the requester <span class="docEmphUl">sending</span> the message.</p>
+<p class="docText">Byte 4, 7:0 = Requester Bus #</p>
+<p class="docText">Byte 5, 7:3 = Requester Device #</p>
+<p class="docText">Byte 5, 2:0 = Requester Function #</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Address 31:2</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 11 Bit 7:2</p>
+<p class="docText">Byte 10 Bit 7:0</p>
+<p class="docText">Byte 9 Bit 7:0</p>
+<p class="docText">Byte 8 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">If
+ address routing was selected for the message (see Type 4:0 field 
+above), then this field contains the lower part of the 64-bit starting 
+address. Otherwise, this field is not used.</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Address 63:32</p></td><td class="docTableCell" valign="top"><p class="docText">Byte 15 Bit 7:2</p>
+<p class="docText">Byte 14 Bit 7:0</p>
+<p class="docText">Byte 13 Bit 7:0</p>
+<p class="docText">Byte 12 Bit 7:0</p></td><td class="docTableCell" valign="top"><p class="docText">If
+ address routing was selected for the message (see Type 4:0 field 
+above), then this field contains the upper 32 bits of the 64 bit 
+starting address. Otherwise, this field is not used.</p></td></tr></tbody></table></p>
+<a name="ch04lev4sec20"></a><h5 class="docSection4Title"> Message Notes</h5>
+<p class="docText">The following tables specify the message coding used 
+for each of the seven message groups, and is based on the message code 
+field listed in <a class="docLink" href="#ch04table10">Table 4-10</a> on page 191. The defined groups include:</p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">INTx Interrupt Signaling</p></span></li><li><span style="font-weight:normal"><p class="docList">Power Management</p></span></li><li><span style="font-weight:normal"><p class="docList">Error Signaling</p></span></li><li><span style="font-weight:normal"><p class="docList">Lock Transaction Support</p></span></li><li><span style="font-weight:normal"><p class="docList">Slot Power Limit Support</p></span></li><li><span style="font-weight:normal"><p class="docList">Vendor Defined Messages</p></span></li><li><span style="font-weight:normal"><p class="docList">Hot Plug Signaling</p></span></li></ol></span>
+<a name="ch04lev4sec21"></a><h5 class="docSection4Title"> INTx Interrupt Signaling</h5>
+<p class="docText">While many devices are capable of using the PCI 2.3 
+Message Signaled Interrupt (MSI) method of delivering interrupts, some 
+devices may not support it. PCI Express defines a virtual wire 
+alternative in which devices simulate the assertion and deassertion of 
+the INTx (INTA-INTD) interrupt signals seen in PCI-based systems. 
+Basically, a message is sent to inform the upstream device an interrupt 
+has been asserted. After servicing, the device which sent the interrupt 
+sends a second message indicating the virtual interrupt signal is being 
+released. Refer to the "<a class="docLink" href="http://www.pzk-agro.com/0321156307_ch09lev1sec5.html#ch09lev1sec5">Message Signaled Interrupts</a>" on page 331 for details. <a class="docLink" href="#ch04table11">Table 4-11</a> summarizes the INTx message coding at the packet level.<a name="idd1e22621"></a></p>
+<a name="ch04table11"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-11. INTx Interrupt Signaling Message Coding</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">INTx Message</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Message Code 7:0</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Routing 2:0</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Assert_INTA</p></td><td class="docTableCell" valign="top"><p class="docText">0010 0000b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Assert_INTB</p></td><td class="docTableCell" valign="top"><p class="docText">0010 0001b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Assert_INTC</p></td><td class="docTableCell" valign="top"><p class="docText">0010 0010b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Assert_INTD</p></td><td class="docTableCell" valign="top"><p class="docText">0010 0011b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Deassert_INTA</p></td><td class="docTableCell" valign="top"><p class="docText">0010 0100b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Deassert_INTB</p></td><td class="docTableCell" valign="top"><p class="docText">0010 0101b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Deassert_INTC</p></td><td class="docTableCell" valign="top"><p class="docText">0010 0110b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Deassert_INTD</p></td><td class="docTableCell" valign="top"><p class="docText">0010 0111b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr></tbody></table></p>
+<p class="docText"><span class="docEmphStrong">Other INTx Rules</span></p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">The INTx Message type does not include a data payload. The Length field is reserved.</p></span></li><li><span style="font-weight:normal"><p class="docList">Assert_INTx
+ and Deassert_INTx are only issued by upstream ports. Checking 
+violations of this rule is optional. If checked, a TLP violation is 
+handled as a Malformed TLP.</p></span></li><li><span style="font-weight:normal"><p class="docList">These
+ messages are required to use the default traffic class, TC0. Receivers 
+must check for violation of this rule (handled as Malformed TLPs).</p></span></li><li><span style="font-weight:normal"><p class="docList">Components
+ at both ends of the link must track the current state of the four 
+virtual interrupts. If the logical state of one of the interrupts 
+changes at the upstream port, the port must send the appropriate INTx 
+message to the downstream port on the same link.</p></span></li><li><span style="font-weight:normal"><p class="docList">INTx
+ signaling is disabled when the Interrupt Disable bit of the Command 
+Register is set = 1 (just as it would be if physical interrupt lines are
+ used).</p></span></li><li><span style="font-weight:normal"><p class="docList">If
+ any virtual INTx signals are active when the Interrupt Disable bit is 
+set in the device, the device must transmit a corresponding 
+Deassert_INTx message onto the link.</p></span></li><li><span style="font-weight:normal"><p class="docList">Switches
+ must track the state of the four INTx signals independently for each 
+downstream port and combine the states for the upstream link.</p></span></li><li><span style="font-weight:normal"><p class="docList">The
+ Root Complex must track the state of the four INTx lines independently 
+and convert them into system interrupts in a system-specific way.</p></span></li><li><span style="font-weight:normal"><p class="docList">Because of switches in the path, the Requester ID in an INTx message may be the last transmitter, not the original requester.</p></span></li></ol></span>
+<a name="ch04lev4sec22"></a><h5 class="docSection4Title"> Power Management Messages</h5><a name="idd1e22821"></a>
+<p class="docText">PCI Express is compatible with PCI power management, and adds the PCI Express active link management mechanism. Refer to <a class="docLink" href="http://www.pzk-agro.com/0321156307_ch16.html#ch16">Chapter 16</a>, entitled "Power Management," on page 567 for a description of power management. <a class="docLink" href="#ch04table12">Table 4-12</a> on page 194 summarizes the four power management message types.</p>
+<a name="ch04table12"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-12. Power Management Message Coding</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Power Management Message</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Message Code 7:0</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Routing 2:0</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">PM_Active_State_Nak</p></td><td class="docTableCell" valign="top"><p class="docText">0001 0100b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">PM_PME</p></td><td class="docTableCell" valign="top"><p class="docText">0001 1000b</p></td><td class="docTableCell" valign="top"><p class="docText">000b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">PM_Turn_Off</p></td><td class="docTableCell" valign="top"><p class="docText">0001 1001b</p></td><td class="docTableCell" valign="top"><p class="docText">011b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">PME_TO_Ack</p></td><td class="docTableCell" valign="top"><p class="docText">0001 1011b</p></td><td class="docTableCell" valign="top"><p class="docText">101b</p></td></tr></tbody></table></p>
+<p class="docText"><span class="docEmphStrong">Other Power Management Message Rules</span></p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">Power Management Message type does not include a data payload. The Length field is reserved.</p></span></li><li><span style="font-weight:normal"><p class="docList">These
+ messages are required to use the default traffic class, TC0. Receivers 
+must check for violation of this rule (handled as Malformed TLPs).</p></span></li><li><span style="font-weight:normal"><p class="docList">PM_PME is sent upstream by component requesting event.</p></span></li><li><span style="font-weight:normal"><p class="docList">PM_Turn_Off is broadcast downstream</p></span></li><li><span style="font-weight:normal"><p class="docList">PME_TO_Ack
+ is sent upstream by endpoint. For switch with devices attached to 
+multiple downstream ports, this message won't be sent upstream until all
+ it is first received from all downstream ports.</p></span></li></ol></span>
+<a name="ch04lev4sec23"></a><h5 class="docSection4Title"> Error Messages</h5>
+<p class="docText">Error messages are sent upstream by enabled devices 
+that detect correctable, non-fatal uncorrectable, and fatal 
+non-correctable errors. The device detecting the error is defined by the
+ Requester ID field in the message header. <a class="docLink" href="#ch04table13">Table 4-13</a> on page 195 describes the three error message types.</p>
+<a name="ch04table13"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-13. Error Message Coding</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Error Message</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Message Code 7:0</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Routing 2:0</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">ERR_COR</p></td><td class="docTableCell" valign="top"><p class="docText">0011 0000b</p></td><td class="docTableCell" valign="top"><p class="docText">000b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">ERR_NONFATAL</p></td><td class="docTableCell" valign="top"><p class="docText">0011 0001b</p></td><td class="docTableCell" valign="top"><p class="docText">000b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">ERR_FATAL</p></td><td class="docTableCell" valign="top"><p class="docText">0011 0011b</p></td><td class="docTableCell" valign="top"><p class="docText">000b</p></td></tr></tbody></table></p>
+<p class="docText"><span class="docEmphStrong">Other Error Signaling Message Rules</span></p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">These
+ messages are required to use the default traffic class, TC0. Receivers 
+must check for violation of this rule (handled as Malformed TLPs).</p></span></li><li><span style="font-weight:normal"><p class="docList">This message type does not include a data payload. The Length field is reserved.</p></span></li><li><span style="font-weight:normal"><p class="docList">The Root Complex converts error messages into system-specific events.</p></span></li></ol></span>
+<a name="ch04lev4sec24"></a><h5 class="docSection4Title"> Unlock Message</h5><a name="idd1e23058"></a>
+<p class="docText">The Unlock message is sent to a completer to release it from lock as part of the PCI Express Locked Transaction sequence. <a class="docLink" href="#ch04table14">Table 4-14</a> on page 196 summarizes the coding for this message.</p>
+<a name="ch04table14"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-14. Unlock Message Coding</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Unlock Message</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Message Code 7:0</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Routing 2:0</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Unlock</p></td><td class="docTableCell" valign="top"><p class="docText">0000 0000b</p></td><td class="docTableCell" valign="top"><p class="docText">011b</p></td></tr></tbody></table></p>
+<p class="docText"><span class="docEmphStrong">Other Unlock Message Rules</span></p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">These
+ messages are required to use the default traffic class, TC0. Receivers 
+must check for violation of this rule (handled as Malformed TLPs).</p></span></li><li><span style="font-weight:normal"><p class="docList">This message type does not include a data payload. The Length field is reserved.</p></span></li></ol></span>
+<a name="ch04lev4sec25"></a><h5 class="docSection4Title"> Slot Power Limit Message</h5><a name="idd1e23133"></a>
+<p class="docText">This message is sent from a downstream switch or Root
+ Complex port to the upstream port of the device attached to it. It 
+conveys a slot power limit which the downstream device then copies into 
+the Device Capabilities Register for its upstream port. <a class="docLink" href="#ch04table15">Table 4-15</a> summarizes the coding for this message.</p>
+<a name="ch04table15"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-15. Slot Power Limit Message Coding</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Unlock Message</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Message Code 7:0</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Routing 2:0</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Set_Slot_Power_Limit</p></td><td class="docTableCell" valign="top"><p class="docText">0101 0000b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr></tbody></table></p>
+<p class="docText"><span class="docEmphStrong">Other Set_Slot_Power_Limit Message Rules</span></p>
+<span style="font-weight:bold"><ol class="docList" type="1"><li><span style="font-weight:normal"><p class="docList">These
+ messages are required to use the default traffic class, TC0. Receivers 
+must check for violation of this rule (handled as Malformed TLPs).</p></span></li><li><span style="font-weight:normal"><p class="docList">This
+ message type carries a data payload of 1 DW. The Length field is set = 
+1. Only the lower 10 bits of the 32-bit data payload is used for slot 
+power scaling; the upper bits in the data payload must be set = 0.</p></span></li><li><span style="font-weight:normal"><p class="docList">This
+ message is sent automatically anytime the link transitions to DL_Up 
+status or if a configuration write to the Slot Capabilities Register 
+occurs when the Data Link Layer reports DL_Up status.</p></span></li><li><span style="font-weight:normal"><p class="docList">If a card in a slot consumes less power than the power limit specified for the card/form factor, it may ignore the message.</p></span></li></ol></span>
+<a name="ch04lev4sec26"></a><h5 class="docSection4Title"> Hot Plug Signaling Message</h5><a name="idd1e23219"></a>
+<p class="docText">These messages are passed between downstream ports of switches and Root Ports that support Hot Plug Event signaling. <a class="docLink" href="#ch04table16">Table 4-16</a> summarizes the Hot Plug message types.</p>
+<a name="ch04table16"></a><p><table rules="all" border="1" cellpadding="4" cellspacing="0" width="100%"><caption><h5 class="docTableTitle">Table 4-16. Hot Plug Message Coding</h5></caption><colgroup align="left" span="3"></colgroup><thead><tr><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Error Message</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Message Code 7:0</span></p></th><th class="docTableHeader" align="center" valign="top"><p class="docText"><span class="docEmphStrong">Routing 2:0</span></p></th></tr></thead><tbody><tr><td class="docTableCell" valign="top"><p class="docText">Attention_Indicator_On</p></td><td class="docTableCell" valign="top"><p class="docText">0100 0001b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Attention_Indicator_Blink</p></td><td class="docTableCell" valign="top"><p class="docText">0100 0011b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Attention_Indicator_Off</p></td><td class="docTableCell" valign="top"><p class="docText">0100 0000b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Power_Indicator_On</p></td><td class="docTableCell" valign="top"><p class="docText">0100 0101b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Power_Indicator_Blink</p></td><td class="docTableCell" valign="top"><p class="docText">0100 0111b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Power_Indicator_Off</p></td><td class="docTableCell" valign="top"><p class="docText">0100 0100b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr><tr><td class="docTableCell" valign="top"><p class="docText">Attention_Button_Pressed</p></td><td class="docTableCell" valign="top"><p class="docText">0100 1000b</p></td><td class="docTableCell" valign="top"><p class="docText">100b</p></td></tr></tbody></table></p>
+<p class="docText"><span class="docEmphStrong">Other Hot Plug Message Rules</span></p>
+<ul><li><p class="docList">The Attention and Power indicator messages are all driven by the switch/root complex port to the card.</p></li><li><p class="docList">The Attention Button message is driven upstream by a slot device that implements a switch.</p></li></ul>
+<a href="http://www.pzk-agro.com/0321156307_16071533.html"><img src="PCIe_files/pixel.gif" height="1" border="0" width="1"></a><ul></ul></td></tr></tbody></table>
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tbody><tr><td class="tt1"><a href="http://www.pzk-agro.com/nfo/lib.html">[ Team LiB ]</a></td><td class="tt1" align="right" valign="top">
+          <a href="http://www.pzk-agro.com/0321156307_ch04lev1sec4.html"><img src="PCIe_files/btn_prev.gif" alt="Previous Section" height="15" align="absmiddle" border="0" width="62"></a>
+          <a href="http://www.pzk-agro.com/0321156307_ch04lev1sec6.html"><img src="PCIe_files/btn_next.gif" alt="Next Section" height="15" align="absmiddle" border="0" width="41"></a>
+</td></tr></tbody></table>
+
+</body></html>
